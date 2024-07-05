@@ -8,8 +8,8 @@
     <body>
         <script src="/static/js/script.js"></script>
         <h1>Furry Frontiers XV</h1>
-        <h3>aka ff15</h3>
-        <button onclick="sendMessage()">I'm a furry</button>
+        <input type="text" id="messageInput" placeholder="Type your message here">
+        <button onclick="sendMessage()">Send Message</button>
         <script>
             let ws = new WebSocket("ws://ec2-3-133-93-0.us-east-2.compute.amazonaws.com:8000/ws");
 
@@ -30,7 +30,13 @@
             };
 
             function sendMessage() {
-                ws.send("Hello, Server!");
+                let message = document.getElementById("messageInput").value;
+                if (message) {
+                    ws.send(message)
+                    document.getElementById("messageInput").value = ''; // Clear the input field after sending the message
+                } else {
+                    alert("Please enter a message to send");
+                }
             }
         </script>
     </body>
