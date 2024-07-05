@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, WebSocketState
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
+from starlette.websockets import WebSocketState
 
 app = FastAPI()
 
