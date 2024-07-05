@@ -28,6 +28,7 @@ async def log_requests(request: Request, call_next):
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    client_ip = websocket.client.host
     await websocket.accept()
     try:
         while True:
@@ -35,9 +36,4 @@ async def websocket_endpoint(websocket: WebSocket):
             print(f"Received message: {data}")
             await websocket.send_text(f"We love gay furries!")
     except WebSocketDisconnect:
-        print("WebSocket connection closed")
-
-# Run the app using Uvicorn
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+        print(f"WebSocket connection closed by {client_ip}")

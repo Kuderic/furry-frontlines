@@ -1,10 +1,5 @@
 # Furry Frontlines XV (FF15)
 
-Run in back-end
-```
-pip install -r requirements.txt
-```
-
 ## Server
 
 The server code is made using the FastAPI, Uvicorn, and Websocket libraries.
