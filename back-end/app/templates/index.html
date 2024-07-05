@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Furry Frontiers XV</title>
+        <link rel="stylesheet" type="text/css" href="/static/styles/main.css">
+        <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+    </head>
+    <body>
+        <script src="/static/js/script.js"></script>
+        <h1>Furry Frontiers XV</h1>
+        <h3>aka ff15</h3>
+        <button onclick="sendMessage()">I'm a furry</button>
+        <script>
+            let ws = new WebSocket("ws://ec2-3-133-93-0.us-east-2.compute.amazonaws.com:8000/ws");
+
+            ws.onopen = function() {
+                console.log("WebSocket connection established");
+            };
+
+            ws.onmessage = function(event) {
+                alert("Message from server: " + event.data);
+            };
+
+            ws.onclose = function(event) {
+                console.log("WebSocket connection closed", event);
+            };
+
+            ws.onerror = function(error) {
+                console.error("WebSocket error:", error);
+            };
+
+            function sendMessage() {
+                ws.send("Hello, Server!");
+            }
+        </script>
+    </body>
+</html>

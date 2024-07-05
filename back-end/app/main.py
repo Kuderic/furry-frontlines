@@ -1,7 +1,20 @@
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
 app = FastAPI()
+
+
+# Mount the static files directory
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# Initialize the templates directory
+templates = Jinja2Templates(directory="app/templates")
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -12,46 +25,6 @@ async def log_requests(request: Request, call_next):
         print("Request has no body.")
     response = await call_next(request)
     return response
-
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>WebSocket Example</title>
-    </head>
-    <body>
-        <h1>WebSocket Example</h1>
-        <button onclick="sendMessage()">Send Message</button>
-        <script>
-            let ws = new WebSocket("ws://ec2-3-133-93-0.us-east-2.compute.amazonaws.com:8000/ws");
-
-            ws.onopen = function() {
-                console.log("WebSocket connection established");
-            };
-
-            ws.onmessage = function(event) {
-                alert("Message from server: " + event.data);
-            };
-
-            ws.onclose = function(event) {
-                console.log("WebSocket connection closed", event);
-            };
-
-            ws.onerror = function(error) {
-                console.error("WebSocket error:", error);
-            };
-
-            function sendMessage() {
-                ws.send("Hello, Server!");
-            }
-        </script>
-    </body>
-</html>
-"""
-
-@app.get("/")
-async def get():
-    return HTMLResponse(html)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
