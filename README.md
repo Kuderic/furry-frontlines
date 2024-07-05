@@ -1,5 +1,7 @@
 # Furry Frontlines XV (FF15)
 
+![Furry Frontlines Wallpaper](https://i.ibb.co/RTyPwJM/upscaled.png)
+
 ## Server
 
 The server code is made using the FastAPI, Uvicorn, and Websocket libraries.

@@ -22,7 +22,7 @@ def print_ips(connected_websockets):
     ips = []
     for websocket in connected_websockets:
         ips.append(websocket.client.host)
-    print(f"List of connected clients:{ips}")
+    print(f"List of connected client IPs: {ips}")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -44,9 +44,11 @@ async def websocket_endpoint(websocket: WebSocket):
     client_ip = websocket.client.host
     await websocket.accept()
     connected_websockets.append(websocket)
+
     print(f"{client_ip} has started a new websocket connection.")
     print_ips(connected_websockets)
-          
+    
+    # Listen to websocket messages loop
     try:
         while True:
             data = await websocket.receive_text()
