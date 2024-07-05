@@ -7,6 +7,9 @@ body {
 #gameCanvas {
     background: #f0f0f0;
     display: block;
+    border:8px solid black;
+    border-radius: 5px;
+    text-align: center;
 }
 
 h1 {
