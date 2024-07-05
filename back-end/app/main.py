@@ -50,14 +50,14 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
-            message = json.loads(data)
-            message_type = message.get("type")
-            print(f"Received message:{message}")
+            in_message = json.loads(data)
+            in_message_type = in_message.get("type")
+            print(f"Received in message. JSON: {in_message}")
 
-            if (message_type == "chat_message"):
+            if (in_message_type == "chat_message"):
                 print(f"Server has parsed this as chat message.")
                 out_json = {"type": "chat_message",
-                            "data": data,
+                            "data": in_message.data,
                             "sender_ip": websocket.client.host}
                 out_json_str = json.dumps(out_json)
                 for ws in connected_websockets:
