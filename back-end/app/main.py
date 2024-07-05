@@ -14,7 +14,14 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
 # Variable to manage connected clients
-connected_clients = []
+connected_websockets = []
+
+def print_ips(connected_websockets):
+    ips = []
+    for websocket in connected_websockets:
+        ips.append(websocket.client.host)
+    print(f"List of connected clients:{connected_websockets}")
+
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
@@ -34,16 +41,17 @@ async def log_requests(request: Request, call_next):
 async def websocket_endpoint(websocket: WebSocket):
     client_ip = websocket.client.host
     await websocket.accept()
-    connected_clients.append(websocket)
-    print(f"{client_ip} has started a new websocket connection.\n List of connected clients:\
-          {connected_clients}")
+    connected_websockets.append(websocket)
+    print(f"{client_ip} has started a new websocket connection.")
+    print_ips(connected_websockets)
+          
     try:
         while True:
             data = await websocket.receive_text()
             print(f"Received message: {data}")
-            for client in connected_clients:
-                if client.application_state == WebSocketState.CONNECTED:
-                    await client.send_text(f"{client.client.host} says {data}")
+            for ws in connected_websockets:
+                if ws.application_state == WebSocketState.CONNECTED:
+                    await ws.send_text(f"{ws.client.host} says {data}")
     except WebSocketDisconnect:
         print(f"WebSocket connection closed by {client_ip}")
-        connected_clients.remove(websocket)
+        connected_websockets.remove(websocket)

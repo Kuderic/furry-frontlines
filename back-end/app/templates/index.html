@@ -10,6 +10,9 @@
         <h1>Furry Frontiers XV</h1>
         <input type="text" id="messageInput" placeholder="Type your message here">
         <button onclick="sendMessage()">Send Message</button>
+
+        <ul id="messagesList"></ul>
+
         <script>
             let ws = new WebSocket("ws://ec2-3-133-93-0.us-east-2.compute.amazonaws.com:8000/ws");
 
@@ -18,7 +21,7 @@
             };
 
             ws.onmessage = function(event) {
-                alert("Message from server: " + event.data);
+                displayMessage(event.data);
             };
 
             ws.onclose = function(event) {
@@ -32,11 +35,18 @@
             function sendMessage() {
                 let message = document.getElementById("messageInput").value;
                 if (message) {
-                    ws.send(message)
+                    ws.send(message);
                     document.getElementById("messageInput").value = ''; // Clear the input field after sending the message
                 } else {
                     alert("Please enter a message to send");
                 }
+            }
+
+            function displayMessage(message) {
+                let messagesList = document.getElementById("messagesList");
+                let messageItem = document.createElement("li");
+                messageItem.textContent = message;
+                messagesList.appendChild(messageItem);
             }
         </script>
     </body>
