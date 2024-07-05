@@ -1,6 +1,12 @@
 body {
     font-family: Arial, sans-serif;
     background-color: lightgrey;
+    overflow: hidden; 
+}
+
+#gameCanvas {
+    background: #f0f0f0;
+    display: block;
 }
 
 h1 {

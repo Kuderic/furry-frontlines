@@ -1,3 +1,5 @@
+import json
+
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -48,10 +50,21 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
-            print(f"Received message: {data}")
-            for ws in connected_websockets:
-                if ws.application_state == WebSocketState.CONNECTED:
-                    await ws.send_text(f"{ws.client.host} says {data}")
+            message = json.loads(data)
+            message_type = message.get("type")
+            print(f"Received message:{message}")
+
+            if (message_type == "chat_message"):
+                print(f"Server has parsed this as chat message.")
+                out_json = {"type": "chat_message",
+                            "data": data,
+                            "sender_ip": websocket.client.host}
+                for ws in connected_websockets:
+                    if ws.application_state == WebSocketState.CONNECTED:
+                        await ws.send_text(out_json)
+            else:
+                print(f"idk what kind of message this is")
+
     except WebSocketDisconnect:
         print(f"WebSocket connection closed by {client_ip}")
         connected_websockets.remove(websocket)
