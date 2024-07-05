@@ -20,7 +20,7 @@ def print_ips(connected_websockets):
     ips = []
     for websocket in connected_websockets:
         ips.append(websocket.client.host)
-    print(f"List of connected clients:{connected_websockets}")
+    print(f"List of connected clients:{ips}")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -55,3 +55,4 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         print(f"WebSocket connection closed by {client_ip}")
         connected_websockets.remove(websocket)
+        print_ips(connected_websockets)
