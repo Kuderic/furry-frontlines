@@ -57,7 +57,7 @@ async def websocket_endpoint(websocket: WebSocket):
             if (in_message_type == "chat_message"):
                 print(f"Server has parsed this as chat message.")
                 out_json = {"type": "chat_message",
-                            "data": in_message.data,
+                            "data": in_message.get("data"),
                             "sender_ip": websocket.client.host}
                 out_json_str = json.dumps(out_json)
                 for ws in connected_websockets:
