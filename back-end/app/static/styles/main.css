@@ -1,17 +1,22 @@
 body {
     font-family: Arial, sans-serif;
     background-color: lightgrey;
-    overflow: hidden; 
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Use the full height of the viewport */
+    margin: 0; /* Remove default margin */
 }
 
 #gameCanvas {
     background: #f0f0f0;
     display: block;
-    border:8px solid black;
+    border: 8px solid black;
     border-radius: 5px;
-    text-align: center;
 }
 
 h1 {
-    color:darkslateblue;
+    color: darkslateblue;
+    text-align: center; /* Center the header text */
 }
