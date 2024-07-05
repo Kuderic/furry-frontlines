@@ -59,9 +59,10 @@ async def websocket_endpoint(websocket: WebSocket):
                 out_json = {"type": "chat_message",
                             "data": data,
                             "sender_ip": websocket.client.host}
+                out_json_str = json.dumps(out_json)
                 for ws in connected_websockets:
                     if ws.application_state == WebSocketState.CONNECTED:
-                        await ws.send_text(out_json)
+                        await ws.send_text(out_json_str)
             else:
                 print(f"idk what kind of message this is")
 
