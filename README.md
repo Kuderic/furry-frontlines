@@ -17,7 +17,7 @@ insert graphics libraries for javascript
 
 
 
-## File Structure
+# File Structure
 
 Explanation of Directories and Files
 
