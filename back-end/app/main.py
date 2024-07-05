@@ -1,4 +1,5 @@
 import json
+import os
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.templating import Jinja2Templates
@@ -9,11 +10,18 @@ from starlette.websockets import WebSocketState
 
 app = FastAPI()
 
-# Mount the static files directory
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# Get the absolute path of the current file
+base_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Initialize the templates directory
-templates = Jinja2Templates(directory="app/templates")
+# Define the paths for static and template directories
+static_dir = os.path.join(base_dir, "static")
+templates_dir = os.path.join(base_dir, "templates")
+
+# Mount the static files directory using the defined path
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+# Initialize the templates directory using the defined path
+templates = Jinja2Templates(directory=templates_dir)
 
 # Variable to manage connected clients
 connected_websockets = []
@@ -72,3 +80,9 @@ async def websocket_endpoint(websocket: WebSocket):
         print(f"WebSocket connection closed by {client_ip}")
         connected_websockets.remove(websocket)
         print_ips(connected_websockets)
+
+# The following block is only for local development purposes.
+# When deploying with a production server, this block is not used.
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
