@@ -81,6 +81,7 @@ async def websocket_endpoint(websocket: WebSocket):
         print(f"WebSocket connection closed by {client_id}")
         del connected_clients[client_id]
         del player_positions[client_id]
+        print_ips()
         await broadcast_positions()
 
 async def broadcast_positions():
@@ -99,4 +100,4 @@ async def broadcast_message(client_id: str, message: str):
 # When deploying with a production server, this block is not used.
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("app", host="127.0.0.1", port=8000, reload=True, log_level="info")
