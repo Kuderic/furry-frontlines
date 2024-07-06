@@ -90,7 +90,6 @@ function drawPlayers() {
     const players = playerManager.getPlayers();
     for (let i = 0; i < players.length; i++) {
         const player = players[i];
-        console.log("drawing player "+player.name+" at "+player.x+", "+player.y);
         ctx.fillStyle = player.color;
         ctx.fillRect(player.x, player.y, 50, 50);
         ctx.strokeStyle = 'black';
@@ -130,26 +129,38 @@ ws.onerror = function(error) {
 // Parse websocket JSON message
 function handleMessage(data) {
     let parsedData = JSON.parse(data);
-    if (parsedData.type === "client_id") {
-        console.log("new player");
-        clientId = parsedData.client_id;
-        const player = new Player(canvas.width / 2, canvas.height / 2, 5, clientId);
-        playerManager.addPlayer(player);
-    } else if (parsedData.type === "chat_message") {
-        displayMessage(parsedData.sender_id, parsedData.data);
-    }
-    else if (parsedData.type === "update") {
-        const players = parsedData.players;
-        for (const [id, playerData] of Object.entries(players)) {
-            if (playerManager.getPlayer(id)) {
-                playerManager.updatePlayer(id, playerData.x, playerData.y);
-            } else {
-                const newPlayer = new Player(playerData.x, playerData.y, 5, id);
-                playerManager.addPlayer(newPlayer);
+
+    switch (parsedData.type) {
+
+        case "client_id":
+            clientId = parsedData.client_id;
+            const player = new Player(canvas.width / 2, canvas.height / 2, 5, clientId);
+            playerManager.addPlayer(player);
+            break;
+
+        case "chat_message":
+            displayMessage(parsedData.sender_id, parsedData.data);
+            break;
+
+        case "update_players":
+            const players = parsedData.players;
+            for (const [id, playerData] of Object.entries(players)) {
+                if (playerManager.getPlayer(id)) {
+                    playerManager.updatePlayer(id, playerData.x, playerData.y);
+                } else {
+                    const newPlayer = new Player(playerData.x, playerData.y, 5, id);
+                    playerManager.addPlayer(newPlayer);
+                }
             }
-        }
-    } else {
-        console.log('Unknown message type:', parsedData);
+            break;
+
+        case "disconnect_player":
+            console.log("disconnect_player_message received");
+            playerManager.removePlayer(parsedData.client_id);
+            break;
+            
+        default:
+            console.log("Unknown message type:", parsedData);
     }
 }
 

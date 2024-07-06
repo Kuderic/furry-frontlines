@@ -4,7 +4,9 @@ export class PlayerManager {
     }
 
     addPlayer(player) {
+        console.log("Player added");
         this.playerList.push(player);
+        this.printPlayers();
     }
 
     getPlayers() {
@@ -16,7 +18,9 @@ export class PlayerManager {
     }
 
     removePlayer(name) {
+        console.log("Player removed");
         this.playerList = this.playerList.filter(player => player.name !== name);
+        this.printPlayers();
     }
 
     updatePlayer(name, x, y) {
@@ -25,5 +29,9 @@ export class PlayerManager {
             player.x = x;
             player.y = y;
         }
+    }
+
+    printPlayers() {
+        console.log(this.playerList);
     }
 }

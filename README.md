@@ -17,7 +17,7 @@ I need graphics libraries for javascript. I heard paperio is good ?
 
 # 😻 File Structure
 
-### 🐱 Server
+### Server
 
 This folder contains all the code to start the server application.
 
@@ -31,7 +31,7 @@ This folder contains all the code to start the server application.
 
     Dockerfile: Instructions to build a Docker image for the backend.
 
-### 😾 Root Directory
+### Root Directory
 
     docker-compose.yml: Configuration for Docker Compose to manage multi-container Docker applications.
     README.md: Documentation for the overall project.

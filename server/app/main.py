@@ -27,7 +27,7 @@ templates = Jinja2Templates(directory=templates_dir)
 
 # Store connected clients and player states
 connected_clients: Dict[str, WebSocket] = {}
-player_positions: Dict[str, Dict[str, float]] = {}
+player_data: Dict[str, Dict[str, float]] = {}
 
 def print_ips():
     ips = []
@@ -37,7 +37,7 @@ def print_ips():
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("main.html", {"request": request})
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -54,7 +54,7 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     client_id = str(uuid.uuid4())
     connected_clients[client_id] = websocket
-    player_positions[client_id] = {"x": 0, "y": 0}
+    player_data[client_id] = {"x": 0, "y": 0}
 
     print(f"{client_id} has started a new websocket connection.")
     print_ips()
@@ -65,12 +65,12 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             data = await websocket.receive_text()
             message  = json.loads(data)
-            print(f"Received message. JSON: {message}")
+            # print(f"Received message. JSON: {message}")
 
             if message["type"] == "move":
-                player_positions[client_id]["x"] = message["x"]
-                player_positions[client_id]["y"] = message["y"]
-                await broadcast_positions()
+                player_data[client_id]["x"] = message["x"]
+                player_data[client_id]["y"] = message["y"]
+                await broadcast_player_data()
             elif (message['type'] == "chat_message"):
                 await broadcast_message(client_id, message["data"])
             else:
@@ -79,24 +79,27 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         print(f"WebSocket connection closed by {client_id}")
         del connected_clients[client_id]
-        del player_positions[client_id]
+        del player_data[client_id]
         print_ips()
-        await broadcast_positions()
+        await broadcast_disconnect(client_id)
 
-async def broadcast_positions():
-    print("Broadcasting player positions")
-    positions = json.dumps({"type": "update", "players": player_positions})
+async def broadcast_player_data():
+    message_str = json.dumps({"type": "update_players", "players": player_data})
     for webSocket in connected_clients.values():
-        await webSocket.send_text(positions)
+        await webSocket.send_text(message_str)
 
 async def broadcast_message(client_id: str, message: str):
-    print("Broadcasting message")
-    chat_message = json.dumps({"type": "chat_message", "sender_id": client_id, "data": message})
+    message_str = json.dumps({"type": "chat_message", "client_id": client_id, "data": message})
     for webSocket in connected_clients.values():
-        await webSocket.send_text(chat_message)
+        await webSocket.send_text(message_str)
+        
+async def broadcast_disconnect(client_id: str):
+    message_str = json.dumps({"type": "disconnect_player", "client_id": client_id})
+    for webSocket in connected_clients.values():
+        await webSocket.send_text(message_str)
 
 # The following block is only for local development purposes.
 # When deploying with a production server, this block is not used.
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app", host="127.0.0.1", port=8000, reload=True, log_level="info")
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True, log_level="info")
