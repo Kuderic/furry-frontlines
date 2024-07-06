@@ -11,8 +11,10 @@
             <h1>😺 Furry Frontiers XV 😺</h1>
             <h2>(aka ff15 😿)</h2>
             <h3> Use WASD to move </h3>
-            <input type="text" id="messageInput" placeholder="Type your message here">
-            <button onclick="sendMessage()">Send Message</button>
+            <form onsubmit="sendMessage(event)">
+                <input type="text" id="messageInput" placeholder="Type your message here">
+                <input type="submit" value="Send Message">
+              </form> 
             <ul id="messagesList"></ul>
         </div>
         <div id="canvasContainer" tabindex="1">

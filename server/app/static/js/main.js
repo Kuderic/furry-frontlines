@@ -139,7 +139,7 @@ function handleMessage(data) {
             break;
 
         case "chat_message":
-            displayMessage(parsedData.sender_id, parsedData.data);
+            displayMessage(parsedData.client_id, parsedData.data);
             break;
 
         case "update_players":
@@ -164,8 +164,9 @@ function handleMessage(data) {
     }
 }
 
-// Send message button logic
-function sendMessage() {
+// Form logic for chat box
+function sendMessage(event) {
+    event.preventDefault(); // Used to stop form reloading page
     let message = document.getElementById("messageInput").value;
     if (message) {
         let data = JSON.stringify({type: "chat_message", data: message});
@@ -174,13 +175,14 @@ function sendMessage() {
     } else {
         alert("Please enter a message to send");
     }
+    return false;
 }
 window.sendMessage = sendMessage; // Attach sendMessage to the window object to make it global
 
-function displayMessage(ip, message) {
+function displayMessage(client_id, message) {
     let messagesList = document.getElementById("messagesList");
     let messageItem = document.createElement("li");
-    messageItem.textContent = ip+' says "'+message+'"';
+    messageItem.textContent = client_id + ' says "' + message + '"';
     messagesList.appendChild(messageItem);
 }
 
