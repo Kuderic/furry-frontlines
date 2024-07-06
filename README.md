@@ -1,8 +1,8 @@
-# Furry Frontier XV (FF15)
+# 😺 Furry Frontiers XV (aka ff15 😿)
 
 [<img src="https://i.ibb.co/RTyPwJM/upscaled.png">](https://furryfrontiers.com/)
 
-## Server
+## 😸 Server
 
 The server code is made using the FastAPI, Uvicorn, and websockets.
 
@@ -10,14 +10,14 @@ The server is meant to be hosted on an AWS EC2 virtual machine, but you can host
 
 The server can be ran and tested locally using `python main.py`, and then going to `localhost:8000` in a browser. It can also be ran using uvicorn, which will host a dedicated server on the designated ports. Example usage: `uvicorn server.app.main:app --host 0.0.0.0 --port 8000`.
 
-## Client
+## 😼 Client 
 
 I need graphics libraries for javascript. I heard paperio is good ?
 
 
-# File Structure
+# 😻 File Structure
 
-### Server
+### 🐱 Server
 
 This folder contains all the code to start the server application.
 
@@ -31,7 +31,7 @@ This folder contains all the code to start the server application.
 
     Dockerfile: Instructions to build a Docker image for the backend.
 
-### Root Directory
+### 😾 Root Directory
 
     docker-compose.yml: Configuration for Docker Compose to manage multi-container Docker applications.
     README.md: Documentation for the overall project.
