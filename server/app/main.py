@@ -61,7 +61,10 @@ async def websocket_endpoint(websocket: WebSocket):
 
     # Listen to websocket messages loop
     try:
+        # Initialize player
         await websocket.send_text(json.dumps({"type": "client_id", "client_id": client_id}))
+        await broadcast_player_data()
+
         while True:
             data = await websocket.receive_text()
             message  = json.loads(data)
