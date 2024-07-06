@@ -1,62 +1,35 @@
-# Furry Frontlines XV (FF15)
+# Furry Frontier XV (FF15)
 
-![Furry Frontlines Wallpaper](https://i.ibb.co/RTyPwJM/upscaled.png)
+[<img src="https://i.ibb.co/RTyPwJM/upscaled.png">](https://furryfrontier.com/)
 
 ## Server
 
-The server code is made using the FastAPI, Uvicorn, and Websocket libraries.
+The server code is made using the FastAPI, Uvicorn, and websockets.
 
 The server is meant to be hosted on an AWS EC2 virtual machine, but you can host it on your own machine, too. Just make sure that you open all the ports and connections correctly.
 
+The server can be ran and tested locally using `python main.py`, and then going to `localhost:8000` in a browser. It can also be ran using uvicorn, which will host a dedicated server on the designated ports. Example usage: `uvicorn server.app.main:app --host 0.0.0.0 --port 8000`.
+
 ## Client
 
-insert graphics libraries for javascript
-
+I need graphics libraries for javascript. I heard paperio is good ?
 
 
 # File Structure
 
-Explanation of Directories and Files
+### Server
 
-
-### Backend
+This folder contains all the code to start the server application.
 
     app/: Main application directory.
         main.py: Entry point for the FastAPI application.
-        routers/: Contains route definitions, separated by functionality (e.g., users, game).
-        models/: Contains database models.
-        schemas/: Contains Pydantic schemas for data validation.
-        services/: Contains business logic and service layer code.
-        utils/: Contains utility functions and helper modules.
+        static/: Contains static files: assets, html, javascript, styling
+        templates/: Jinja2Templates served by FastAPI
         tests/: Contains test cases.
 
     requirements.txt: Lists Python dependencies.
 
     Dockerfile: Instructions to build a Docker image for the backend.
-
-    .env: Environment variables for configuration.
-
-    README.md: Documentation for the backend.
-
-### Frontend
-
-    public/: Contains static files like index.html.
-
-    src/: Main source directory for the front-end code.
-        assets/: Contains images, styles, and other static assets.
-        components/: Contains React components.
-        services/: Contains API service functions to communicate with the backend.
-        utils/: Contains utility functions and helper modules.
-        App.js: Main React component.
-        index.js: Entry point for the React application.
-
-    package.json: Lists JavaScript dependencies and scripts.
-
-    webpack.config.js: Webpack configuration for bundling the front-end code.
-
-    Dockerfile: Instructions to build a Docker image for the frontend.
-
-    README.md: Documentation for the frontend.
 
 ### Root Directory
 
