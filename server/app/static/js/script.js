@@ -1,4 +1,5 @@
 import { Player } from './player.js';
+import { PlayerManager } from './playerManager.js';
 
 // Throttle updates to 10 times per second (10 Hz)
 let lastSentTime = 0;
@@ -7,10 +8,10 @@ const throttleInterval = 100; // 100 ms = 10 updates per second
 // Game logic
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+let clientId = "";
 
-// Create an instance of the Player class
-let player = new Player(canvas.width / 2, canvas.height / 2, 5, "Player1");
-const playerList = [player];
+// Create an instance of the PlayerManager class
+const playerManager = new PlayerManager();
 
 const heldKeys = {
     w: false,
@@ -20,7 +21,12 @@ const heldKeys = {
 };
 
 function updatePlayerPosition() {
-    player = playerList[0]
+    if (playerManager.getPlayers().length === 0) {
+        console.log("no players found");
+        requestAnimationFrame(updatePlayerPosition);
+        return;
+    }
+    const player = playerManager.getPlayer(clientId);
     const starting_pos = {x: player.x, y: player.y}
     if (heldKeys.w) {
         player.y -= player.speed;
@@ -78,13 +84,16 @@ document.addEventListener('keyup', (event) => {
 });
 
 function drawPlayers() {
-    for (let i = 0; i < playerList.length; i++) {
-        player = playerList[0];
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Draw background
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const players = playerManager.getPlayers();
+    for (let i = 0; i < players.length; i++) {
+        const player = players[i];
+        console.log("drawing player "+player.name+" at "+player.x+", "+player.y);
         ctx.fillStyle = player.color;
         ctx.fillRect(player.x, player.y, 50, 50);
         ctx.strokeStyle = 'black';
-        ctx.shadowColor = "#d53";
         ctx.lineJoin = "bevel";
         ctx.lineWidth = 4;
         ctx.strokeRect(player.x-2, player.y-2, 52, 52);
@@ -121,16 +130,26 @@ ws.onerror = function(error) {
 // Parse websocket JSON message
 function handleMessage(data) {
     let parsedData = JSON.parse(data);
-    console.log("received server message " + parsedData);
-    if (parsedData.type === "chat_message") {
-        console.log('is chat message')
-        displayMessage(parsedData.sender_ip, parsedData.data)
+    if (parsedData.type === "client_id") {
+        console.log("new player");
+        clientId = parsedData.client_id;
+        const player = new Player(canvas.width / 2, canvas.height / 2, 5, clientId);
+        playerManager.addPlayer(player);
+    } else if (parsedData.type === "chat_message") {
+        displayMessage(parsedData.sender_id, parsedData.data);
     }
     else if (parsedData.type === "update") {
-        player.x = parsedData.x;
-        player.y = parsedData.y;
+        const players = parsedData.players;
+        for (const [id, playerData] of Object.entries(players)) {
+            if (playerManager.getPlayer(id)) {
+                playerManager.updatePlayer(id, playerData.x, playerData.y);
+            } else {
+                const newPlayer = new Player(playerData.x, playerData.y, 5, id);
+                playerManager.addPlayer(newPlayer);
+            }
+        }
     } else {
-        console.log('idk what kind of message this is')
+        console.log('Unknown message type:', parsedData);
     }
 }
 

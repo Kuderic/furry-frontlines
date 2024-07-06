@@ -1,12 +1,14 @@
 import json
 import os
+import uuid
 
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
-from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from typing import List, Dict
 
-from starlette.websockets import WebSocketState
+# from starlette.websockets import WebSocketState
 
 app = FastAPI()
 
@@ -23,12 +25,13 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 # Initialize the templates directory using the defined path
 templates = Jinja2Templates(directory=templates_dir)
 
-# Variable to manage connected clients
-connected_websockets = []
+# Store connected clients and player states
+connected_clients: Dict[str, WebSocket] = {}
+player_positions: Dict[str, Dict[str, float]] = {}
 
-def print_ips(connected_websockets):
+def print_ips():
     ips = []
-    for websocket in connected_websockets:
+    for websocket in connected_clients.values():
         ips.append(websocket.client.host)
     print(f"List of connected client IPs: {ips}")
 
@@ -49,37 +52,48 @@ async def log_requests(request: Request, call_next):
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    client_ip = websocket.client.host
     await websocket.accept()
-    connected_websockets.append(websocket)
+    client_id = str(uuid.uuid4())
+    connected_clients[client_id] = websocket
+    player_positions[client_id] = {"x": 0, "y": 0}
 
-    print(f"{client_ip} has started a new websocket connection.")
-    print_ips(connected_websockets)
-    
+    print(f"{client_id} has started a new websocket connection.")
+    print_ips()
+
     # Listen to websocket messages loop
     try:
+        await websocket.send_text(json.dumps({"type": "client_id", "client_id": client_id}))
         while True:
             data = await websocket.receive_text()
-            in_message = json.loads(data)
-            in_message_type = in_message.get("type")
-            print(f"Received in message. JSON: {in_message}")
+            message  = json.loads(data)
+            print(f"Received message. JSON: {message}")
 
-            if (in_message_type == "chat_message"):
-                print(f"Server has parsed this as chat message.")
-                out_json = {"type": "chat_message",
-                            "data": in_message.get("data"),
-                            "sender_ip": websocket.client.host}
-                out_json_str = json.dumps(out_json)
-                for ws in connected_websockets:
-                    if ws.application_state == WebSocketState.CONNECTED:
-                        await ws.send_text(out_json_str)
+            if message["type"] == "move":
+                player_positions[client_id]["x"] = message["x"]
+                player_positions[client_id]["y"] = message["y"]
+                await broadcast_positions()
+            elif (message['type'] == "chat_message"):
+                await broadcast_message(client_id, message["data"])
             else:
-                print(f"idk what kind of message this is")
+                print(f"Unknown message type")
 
     except WebSocketDisconnect:
-        print(f"WebSocket connection closed by {client_ip}")
-        connected_websockets.remove(websocket)
-        print_ips(connected_websockets)
+        print(f"WebSocket connection closed by {client_id}")
+        del connected_clients[client_id]
+        del player_positions[client_id]
+        await broadcast_positions()
+
+async def broadcast_positions():
+    print("Broadcasting player positions")
+    positions = json.dumps({"type": "update", "players": player_positions})
+    for webSocket in connected_clients.values():
+        await webSocket.send_text(positions)
+
+async def broadcast_message(client_id: str, message: str):
+    print("Broadcasting message")
+    chat_message = json.dumps({"type": "chat_message", "sender_id": client_id, "data": message})
+    for webSocket in connected_clients.values():
+        await webSocket.send_text(chat_message)
 
 # The following block is only for local development purposes.
 # When deploying with a production server, this block is not used.
