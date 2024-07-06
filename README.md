@@ -1,6 +1,6 @@
 # Furry Frontier XV (FF15)
 
-[<img src="https://i.ibb.co/RTyPwJM/upscaled.png">](https://furryfrontier.com/)
+[<img src="https://i.ibb.co/RTyPwJM/upscaled.png">](https://furryfrontiers.com/)
 
 ## Server
 
