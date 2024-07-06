@@ -106,7 +106,7 @@ let wsUrl;
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     wsUrl = "ws://localhost:8000/ws"; // Local server
 } else {
-    wsUrl = "ws://ec2-3-133-93-0.us-east-2.compute.amazonaws.com:8000/ws"; // Production server
+    wsUrl = "wss://furryfrontiers.com/ws"; // Production server
 }
 
 let ws = new WebSocket(wsUrl);

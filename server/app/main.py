@@ -35,7 +35,6 @@ def print_ips():
         ips.append(websocket.client.host)
     print(f"List of connected client IPs: {ips}")
 
-
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
