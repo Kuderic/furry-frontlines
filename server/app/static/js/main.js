@@ -153,7 +153,7 @@ function handleMessage(data) {
                 if (playerManager.getPlayer(id)) {
                     playerManager.updatePlayer(id, playerData.x, playerData.y);
                 } else {
-                    const newPlayer = new Player(playerData.x, playerData.y, 5, playerData.name);
+                    const newPlayer = new Player(playerData.x, playerData.y, 5, playerData.name, playerData.color);
                     playerManager.addPlayer(id, newPlayer);
                 }
             }
