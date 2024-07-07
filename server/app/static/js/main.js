@@ -1,5 +1,6 @@
 import { Player } from './player.js';
 import { PlayerManager } from './playerManager.js';
+import './game.js';
 
 // Throttle updates to 10 times per second (10 Hz)
 let lastSentTime = 0;
