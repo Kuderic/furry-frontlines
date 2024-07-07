@@ -146,6 +146,10 @@ function handleMessage(data) {
         case "update_players":
             const players = msg.players;
             for (const [id, playerData] of Object.entries(msg.players)) {
+                // skip myself because it will teleport me back a fraction of a second
+                if (id === myClientId) {
+                    continue;
+                }
                 if (playerManager.getPlayer(id)) {
                     playerManager.updatePlayer(id, playerData.x, playerData.y);
                 } else {
