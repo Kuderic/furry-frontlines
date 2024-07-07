@@ -21,12 +21,16 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-}
+    border: 2px solid red;
 
-#gameCanvas {
-    width: 1000px;
-    background: #f0f0f0;
-    border-radius: 15px;
+    ul {
+        /* border: 3px solid darkblue; */
+        margin: 5px;
+        padding: 3px;
+    }
+    li {
+        list-style-type: none;
+    }
 }
 
 #chatBox {
@@ -40,6 +44,8 @@ body {
     padding: 10px;
     border-radius: 5px;
 }
+
+#chatBox > .
 
 h1 {
     font-size: 3em;

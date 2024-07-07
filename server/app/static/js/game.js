@@ -1,7 +1,8 @@
-const config = {
+export var phaserConfig = {
     type: Phaser.AUTO,
-    width: 100,
-    height: 100,
+    width: 1200,
+    height: 800,
+    parent: 'canvasContainer',
     physics: {
         default: 'arcade',
         arcade: {
@@ -15,7 +16,8 @@ const config = {
     }
 };
 
-const game = new Phaser.Game(config);
+var game = new Phaser.Game(phaserConfig);
+let player;
 let cursors;
 let backgroundMusic;
 let musicStarted = false; // Flag to check if music has started
@@ -27,7 +29,7 @@ function preload() {
 }
 
 function create() {
-    // cursors = this.input.keyboard.createCursorKeys();
+    cursors = this.input.keyboard.createCursorKeys();
 
     // Add and play background music
     backgroundMusic = this.sound.add('bgMusic');
@@ -56,33 +58,33 @@ function create() {
 }
 
 function update() {
-    // if (!player) return;
+    if (!player) return;
 
-    // let x = player.x;
-    // let y = player.y;
+    let x = player.x;
+    let y = player.y;
 
-    // if (cursors.left.isDown) {
-    //     player.setVelocityX(-150);
-    // } else if (cursors.right.isDown) {
-    //     player.setVelocityX(150);
-    // } else {
-    //     player.setVelocityX(0);
-    // }
+    if (cursors.left.isDown) {
+        player.setVelocityX(-150);
+    } else if (cursors.right.isDown) {
+        player.setVelocityX(150);
+    } else {
+        player.setVelocityX(0);
+    }
 
-    // if (cursors.up.isDown) {
-    //     player.setVelocityY(-150);
-    // } else if (cursors.down.isDown) {
-    //     player.setVelocityY(150);
-    // } else {
-    //     player.setVelocityY(0);
-    // }
+    if (cursors.up.isDown) {
+        player.setVelocityY(-150);
+    } else if (cursors.down.isDown) {
+        player.setVelocityY(150);
+    } else {
+        player.setVelocityY(0);
+    }
 
-    // if (player.x !== x || player.y !== y) {
-    //     socket.send(JSON.stringify({
-    //         type: 'move',
-    //         id: player.id,
-    //         x: player.x,
-    //         y: player.y
-    //     }));
-    // }
+    if (player.x !== x || player.y !== y) {
+        socket.send(JSON.stringify({
+            type: 'move',
+            id: player.id,
+            x: player.x,
+            y: player.y
+        }));
+    }
 }

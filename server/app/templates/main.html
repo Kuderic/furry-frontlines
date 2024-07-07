@@ -12,16 +12,16 @@
             <!-- <h2>(aka ff15 😿)</h2> -->
             <h3>Use WASD to move</h3>
         </div>
-        <div id="canvasContainer" tabindex="-1">
-            <canvas id="gameCanvas" width="1200" height="800"></canvas>
+        <div id="canvasContainer">
+            <script type="module" src="/static/js/main.js"></script>
             <div id="chatBox">
                 <form onsubmit="sendMessage(event)">
                     <input type="text" id="messageInput" placeholder="Type your message here">
                     <input type="submit" value="Send">
                 </form>
+                <hr>
                 <ul id="messagesList"></ul>
             </div>
         </div>
-        <script type="module" src="/static/js/main.js"></script>
     </body>
 </html>

@@ -4,11 +4,9 @@ import './game.js';
 
 // Throttle updates to 10 times per second (10 Hz)
 let lastSentTime = 0;
-const throttleInterval = 50; // 100 ms = 10 updates per second
+const throttleInterval = 20; // 100 ms = 10 updates per second
 
 // Game logic
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
 let myClientId = "";
 
 // Create an instance of the PlayerManager class
@@ -44,14 +42,14 @@ function updatePlayerPosition() {
     if (player.y < 0) {
         player.y = 0;
     }
-    if (player.y > canvas.height) {
-        player.y = canvas.height;
+    if (player.y > phaserConfig.height) {
+        player.y = phaserConfig.height;
     }
     if (player.x < 0) {
         player.x = 0;
     }
-    if (player.x > canvas.width) {
-        player.x = canvas.width;
+    if (player.x > phaserConfig.width) {
+        player.x = phaserConfig.width;
     }
     
     if (player.x !== starting_pos.x || player.y !== starting_pos.y) {
@@ -71,31 +69,21 @@ function updatePlayerPosition() {
 }
 
 document.addEventListener('keydown', (event) => {
-    // console.log("keydown");
     if (event.key in heldKeys) {
         heldKeys[event.key] = true;
     }
 });
 
 document.addEventListener('keyup', (event) => {
-    // console.log("keyup");
     if (event.key in heldKeys) {
         heldKeys[event.key] = false;
     }
 });
 
 function drawPlayers() {
-    // Draw background
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     const players = playerManager.getPlayers();
     for (const [client_id, player] of Object.entries(players)) {
-        ctx.fillStyle = player.color;
-        ctx.fillRect(player.x, player.y, 50, 50);
-        ctx.strokeStyle = 'black';
-        ctx.lineJoin = "bevel";
-        ctx.lineWidth = 4;
-        ctx.strokeRect(player.x-2, player.y-2, 52, 52);
+        console.log("drawing player "+client_id);
     }
 }
 
@@ -192,7 +180,7 @@ function displayMessage(client_id, message) {
     let messagesList = document.getElementById("messagesList");
     let messageItem = document.createElement("li");
     const playerName = playerManager.getPlayer(client_id).name
-    messageItem.textContent = playerName + ' says "' + message + '"';
+    messageItem.textContent = playerName + ': ' + message;
     messagesList.appendChild(messageItem);
 }
 
