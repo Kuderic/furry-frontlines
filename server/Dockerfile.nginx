@@ -1,0 +1,16 @@
+# Use the official Nginx image from the Docker Hub
+FROM nginx:alpine
+
+# Copy the custom Nginx configuration file to the container
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy the SSL certificates and configurations
+COPY certs/live/furryfrontiers.com/fullchain.pem /etc/letsencrypt/live/furryfrontiers.com/fullchain.pem
+COPY certs/live/furryfrontiers.com/privkey.pem /etc/letsencrypt/live/furryfrontiers.com/privkey.pem
+COPY certs/options-ssl-nginx.conf /etc/letsencrypt/options-ssl-nginx.conf
+COPY certs/ssl-dhparams.pem /etc/letsencrypt/ssl-dhparams.pem
+
+# Expose port 80 and 443 for Nginx
+EXPOSE 80
+EXPOSE 443
+
