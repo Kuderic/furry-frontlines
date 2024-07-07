@@ -3,12 +3,12 @@ import { PlayerManager } from './playerManager.js';
 
 // Throttle updates to 10 times per second (10 Hz)
 let lastSentTime = 0;
-const throttleInterval = 100; // 100 ms = 10 updates per second
+const throttleInterval = 20; // 100 ms = 10 updates per second
 
 // Game logic
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-let clientId = "";
+let myClientId = "";
 
 // Create an instance of the PlayerManager class
 const playerManager = new PlayerManager();
@@ -21,12 +21,12 @@ const heldKeys = {
 };
 
 function updatePlayerPosition() {
-    if (playerManager.getPlayers().length === 0) {
-        console.log("no players found");
+    if (myClientId === "") {
+        console.log("waiting for server to init player");
         requestAnimationFrame(updatePlayerPosition);
         return;
     }
-    const player = playerManager.getPlayer(clientId);
+    const player = playerManager.getPlayer(myClientId);
     const starting_pos = {x: player.x, y: player.y}
     if (heldKeys.w) {
         player.y -= player.speed;
@@ -88,8 +88,7 @@ function drawPlayers() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const players = playerManager.getPlayers();
-    for (let i = 0; i < players.length; i++) {
-        const player = players[i];
+    for (const [client_id, player] of Object.entries(players)) {
         ctx.fillStyle = player.color;
         ctx.fillRect(player.x, player.y, 50, 50);
         ctx.strokeStyle = 'black';
@@ -128,48 +127,53 @@ ws.onerror = function(error) {
 
 // Parse websocket JSON message
 function handleMessage(data) {
-    let parsedData = JSON.parse(data);
+    let msg = JSON.parse(data);
 
-    switch (parsedData.type) {
+    switch (msg.type) {
 
-        case "client_id":
-            clientId = parsedData.client_id;
-            const player = new Player(canvas.width / 2, canvas.height / 2, 5, clientId);
-            playerManager.addPlayer(player);
+        case "new_player":
+            const playerData = msg.player;
+            const playerId = msg.client_id;
+            const player = new Player(playerData.x, playerData.y, 5, playerData.name, playerData.color);
+            playerManager.addPlayer(playerId, player);
+            myClientId = playerId;
             break;
 
         case "chat_message":
-            displayMessage(parsedData.client_id, parsedData.data);
+            displayMessage(msg.client_id, msg.data);
             break;
 
         case "update_players":
-            const players = parsedData.players;
-            for (const [id, playerData] of Object.entries(players)) {
+            const players = msg.players;
+            for (const [id, playerData] of Object.entries(msg.players)) {
                 if (playerManager.getPlayer(id)) {
                     playerManager.updatePlayer(id, playerData.x, playerData.y);
                 } else {
-                    const newPlayer = new Player(playerData.x, playerData.y, 5, id);
-                    playerManager.addPlayer(newPlayer);
+                    const newPlayer = new Player(playerData.x, playerData.y, 5, playerData.name);
+                    playerManager.addPlayer(id, newPlayer);
                 }
             }
             break;
 
         case "disconnect_player":
             console.log("disconnect_player_message received");
-            playerManager.removePlayer(parsedData.client_id);
+            playerManager.removePlayer(msg.client_id);
             break;
             
         default:
-            console.log("Unknown message type:", parsedData);
+            console.log("Unknown message type. Message: ", msg);
     }
 }
 
 // Form logic for chat box
 function sendMessage(event) {
     event.preventDefault(); // Used to stop form reloading page
-    let message = document.getElementById("messageInput").value;
+    const message = document.getElementById("messageInput").value;
     if (message) {
-        let data = JSON.stringify({type: "chat_message", data: message});
+        const data = JSON.stringify({
+            type: "chat_message",
+            data: message
+        });
         ws.send(data);
         document.getElementById("messageInput").value = ''; // Clear the input field after sending the message
     } else {
@@ -182,7 +186,8 @@ window.sendMessage = sendMessage; // Attach sendMessage to the window object to 
 function displayMessage(client_id, message) {
     let messagesList = document.getElementById("messagesList");
     let messageItem = document.createElement("li");
-    messageItem.textContent = client_id + ' says "' + message + '"';
+    const playerName = playerManager.getPlayer(client_id).name
+    messageItem.textContent = playerName + ' says "' + message + '"';
     messagesList.appendChild(messageItem);
 }
 

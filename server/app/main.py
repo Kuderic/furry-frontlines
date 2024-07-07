@@ -1,12 +1,29 @@
 import json
 import os
 import uuid
+from random import randint
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from typing import List, Dict
+
+class Player():
+    def __init__(self, x, y, name):
+        self.x = x
+        self.y = y
+        self.name = name
+        rand_hue = randint(0,255)
+        self.color = f"hsl({rand_hue}, 100%, 80%)"
+
+    def to_dict(self) -> Dict[str, any]:
+        return {
+            "x": self.x,
+            "y": self.y,
+            "name": self.name,
+            "color": self.color
+        }
 
 # from starlette.websockets import WebSocketState
 
@@ -27,7 +44,7 @@ templates = Jinja2Templates(directory=templates_dir)
 
 # Store connected clients and player states
 connected_clients: Dict[str, WebSocket] = {}
-player_data: Dict[str, Dict[str, float]] = {}
+player_list: Dict[str, Player] = {}
 
 def print_ips():
     ips = []
@@ -42,28 +59,23 @@ async def read_root(request: Request):
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     body = await request.body()
-    if body:
-        print(f"Request Body: {body}")
-    else:
-        print("Request has no body.")
     response = await call_next(request)
     return response
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    client_id = str(uuid.uuid4())
+    # Initialize player for this websocket and send it to websocket
+    client_id = await create_new_player(websocket)
     connected_clients[client_id] = websocket
-    player_data[client_id] = {"x": 0, "y": 0}
-
-    print(f"{client_id} has started a new websocket connection.")
     print_ips()
+    await send_new_player(websocket, client_id)
+
+    # Let this websocket know about all players
+    await broadcast_player_data()
 
     # Listen to websocket messages loop
     try:
-        # Initialize player
-        await websocket.send_text(json.dumps({"type": "client_id", "client_id": client_id}))
-        await broadcast_player_data()
 
         while True:
             data = await websocket.receive_text()
@@ -71,8 +83,8 @@ async def websocket_endpoint(websocket: WebSocket):
             # print(f"Received message. JSON: {message}")
 
             if message["type"] == "move":
-                player_data[client_id]["x"] = message["x"]
-                player_data[client_id]["y"] = message["y"]
+                player_list[client_id].x = message["x"]
+                player_list[client_id].y = message["y"]
                 await broadcast_player_data()
             elif (message['type'] == "chat_message"):
                 await broadcast_message(client_id, message["data"])
@@ -82,22 +94,59 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         print(f"WebSocket connection closed by {client_id}")
         del connected_clients[client_id]
-        del player_data[client_id]
+        del player_list[client_id]
         print_ips()
         await broadcast_disconnect(client_id)
+        await broadcast_player_data()
+
+async def create_new_player(websocket):
+    """
+    Creates a new player and stores it in player_data.
+    Returns: Unique ID for the player. Should only be known by server 
+    """
+    id = str(uuid.uuid4())
+    new_player = Player(x=randint(0, 100),
+                        y=randint(0, 100),
+                        name=await generate_name(id))
+    player_list[id] = new_player
+
+    print("New Player:", new_player.to_dict())
+    return id
+
+async def generate_name(id):
+    # TO-DO add name generator library
+    return "Eric-"+str(id)[:2]
+
+async def send_new_player(websocket, client_id):
+    player = player_list[client_id]
+    await websocket.send_text(json.dumps({
+        "type": "new_player",
+        "client_id": client_id,
+        "player": player.to_dict()
+    }))
 
 async def broadcast_player_data():
-    message_str = json.dumps({"type": "update_players", "players": player_data})
+    player_dict = {client_id: player.to_dict() for client_id, player in player_list.items()}
+    message_str = json.dumps({"type":
+                              "update_players",
+                              "players": player_dict
+                            })
     for webSocket in connected_clients.values():
         await webSocket.send_text(message_str)
 
 async def broadcast_message(client_id: str, message: str):
-    message_str = json.dumps({"type": "chat_message", "client_id": client_id, "data": message})
+    message_str = json.dumps({"type": "chat_message",
+                              "client_id": client_id,
+                              "data": message
+                            })
     for webSocket in connected_clients.values():
         await webSocket.send_text(message_str)
         
 async def broadcast_disconnect(client_id: str):
-    message_str = json.dumps({"type": "disconnect_player", "client_id": client_id})
+    message_str = json.dumps({"type":
+                              "disconnect_player",
+                              "client_id": client_id
+                            })
     for webSocket in connected_clients.values():
         await webSocket.send_text(message_str)
 

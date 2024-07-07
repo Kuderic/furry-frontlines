@@ -1,30 +1,32 @@
+import { Player } from './player.js';
+
 export class PlayerManager {
     constructor() {
-        this.playerList = [];
+        this.players = {}; // Change from array to object (dictionary)
     }
 
-    addPlayer(player) {
+    addPlayer(id, player) {
         console.log("Player added");
-        this.playerList.push(player);
+        this.players[id] = player;
         this.printPlayers();
     }
 
     getPlayers() {
-        return this.playerList;
+        return this.players;
     }
 
-    getPlayer(name) {
-        return this.playerList.find(player => player.name === name);
+    getPlayer(id) {
+        return this.players[id];
     }
 
-    removePlayer(name) {
+    removePlayer(id) {
         console.log("Player removed");
-        this.playerList = this.playerList.filter(player => player.name !== name);
+        delete this.players[id];
         this.printPlayers();
     }
 
-    updatePlayer(name, x, y) {
-        const player = this.getPlayer(name);
+    updatePlayer(id, x, y) {
+        const player = this.getPlayer(id);
         if (player) {
             player.x = x;
             player.y = y;
@@ -32,6 +34,6 @@ export class PlayerManager {
     }
 
     printPlayers() {
-        console.log(this.playerList);
+        console.log(this.players);
     }
 }
