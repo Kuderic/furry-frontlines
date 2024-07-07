@@ -49,6 +49,7 @@ player_list: Dict[str, Player] = {}
 
 def print_ips():
     ips = []
+    print(connected_clients)
     for websocket in connected_clients.values():
         ips.append(websocket.client.host)
     print(f"List of connected client IPs: {ips}")

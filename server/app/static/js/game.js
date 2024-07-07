@@ -37,7 +37,7 @@ function create() {
         if (!musicStarted) {
             backgroundMusic.play({
                 loop: true,
-                volume: 0.5
+                volume: 0.25
             });
             musicStarted = true; // Update the flag
         }
@@ -48,7 +48,7 @@ function create() {
         if (!musicStarted) {
             backgroundMusic.play({
                 loop: true,
-                volume: 0.5
+                volume: 0.25
             });
             musicStarted = true; // Update the flag
         }
