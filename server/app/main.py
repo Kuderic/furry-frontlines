@@ -1,13 +1,14 @@
 import json
 import os
 import uuid
+from typing import List, Dict
 from random import randint
+from names_generator import generate_name
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
-from typing import List, Dict
 
 class Player():
     def __init__(self, x, y, name):
@@ -107,15 +108,11 @@ async def create_new_player(websocket):
     id = str(uuid.uuid4())
     new_player = Player(x=randint(0, 100),
                         y=randint(0, 100),
-                        name=await generate_name(id))
+                        name=generate_name(style='capital', seed=id))
     player_list[id] = new_player
 
     print("New Player:", new_player.to_dict())
     return id
-
-async def generate_name(id):
-    # TO-DO add name generator library
-    return "Eric-"+str(id)[:2]
 
 async def send_new_player(websocket, client_id):
     player = player_list[client_id]
