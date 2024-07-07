@@ -3,7 +3,7 @@ import { PlayerManager } from './playerManager.js';
 
 // Throttle updates to 10 times per second (10 Hz)
 let lastSentTime = 0;
-const throttleInterval = 20; // 100 ms = 10 updates per second
+const throttleInterval = 50; // 100 ms = 10 updates per second
 
 // Game logic
 const canvas = document.getElementById('gameCanvas');

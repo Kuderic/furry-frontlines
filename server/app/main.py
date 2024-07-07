@@ -106,8 +106,8 @@ async def create_new_player(websocket):
     Returns: Unique ID for the player. Should only be known by server 
     """
     id = str(uuid.uuid4())
-    new_player = Player(x=randint(0, 100),
-                        y=randint(0, 100),
+    new_player = Player(x=randint(0, 300),
+                        y=randint(0, 300),
                         name=generate_name(style='capital', seed=id))
     player_list[id] = new_player
 
