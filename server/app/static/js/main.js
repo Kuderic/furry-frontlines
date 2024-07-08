@@ -1,189 +1,224 @@
 import { Player } from './player.js';
-import { PlayerManager } from './playerManager.js';
-import './game.js';
 
-// Throttle updates to 10 times per second (10 Hz)
-let lastSentTime = 0;
-const throttleInterval = 20; // 100 ms = 10 updates per second
+const NEW_PLAYER_SPEED = 300;
 
-// Game logic
-let myClientId = "";
-
-// Create an instance of the PlayerManager class
-const playerManager = new PlayerManager();
-
-const heldKeys = {
-    w: false,
-    a: false,
-    s: false,
-    d: false
-};
-
-function updatePlayerPosition() {
-    if (myClientId === "") {
-        console.log("waiting for server to init player");
-        requestAnimationFrame(updatePlayerPosition);
-        return;
+class GameScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameScene' });
+        this.player;
+        this.otherPlayers = {};
+        this.myPlayerId = "";
+        this.lastSentTime = 0;
+        this.throttleInterval = 100; // 10 updates per second
+        this.musicStarted = false; // Flag to check if music has started
     }
-    const player = playerManager.getPlayer(myClientId);
-    const starting_pos = {x: player.x, y: player.y}
-    if (heldKeys.w) {
-        player.y -= player.speed;
-    }
-    if (heldKeys.s) {
-        player.y += player.speed;
-    }
-    if (heldKeys.a) {
-        player.x -= player.speed;
-    }
-    if (heldKeys.d) {
-        player.x += player.speed;
-    }
-    if (player.y < 0) {
-        player.y = 0;
-    }
-    if (player.y > phaserConfig.height) {
-        player.y = phaserConfig.height;
-    }
-    if (player.x < 0) {
-        player.x = 0;
-    }
-    if (player.x > phaserConfig.width) {
-        player.x = phaserConfig.width;
+    preload() {
+        this.load.image('player', 'static/images/bunny1.png'); // Replace with your player image path
+        this.load.image('player1', 'static/images/bunny2.png'); // Replace with your player image path
+        this.load.image('player2', 'static/images/bunny3.png'); // Replace with your player image path
+        this.load.audio('bgMusic', 'static/sounds/billie-eilish-meow.mp3'); // Load the background music
     }
     
-    if (player.x !== starting_pos.x || player.y !== starting_pos.y) {
-        // Send updated position to the server at 50hz max
-        const currentTime = Date.now();
-        if (currentTime - lastSentTime > throttleInterval && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-                type: 'move',
-                x: player.x,
-                y: player.y
-            }));
-            lastSentTime = currentTime;
+    create() {
+        this.ws = this.createWebsocket();
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.addBackgroundMusic();
+        // Attach sendMessage to the window object
+        window.sendMessage = this.sendMessage.bind(this);
+    }
+    
+    update() {
+        if (!this.player) return;
+
+        const { cursors, player, ws, myPlayerId: myPlayerId, playerManager, lastSentTime, throttleInterval } = this;
+
+        let x = this.player.sprite.x;
+        let y = this.player.sprite.y;
+
+        if (cursors.left.isDown) {
+            player.sprite.setVelocityX(-1 * player.speed);
+        } else if (cursors.right.isDown) {
+            player.sprite.setVelocityX(1 * player.speed);
+        } else {
+            player.sprite.setVelocityX(0);
+        }
+
+        if (cursors.up.isDown) {
+            player.sprite.setVelocityY(-1 * player.speed);
+        } else if (cursors.down.isDown) {
+            player.sprite.setVelocityY(1 * player.speed);
+        } else {
+            player.sprite.setVelocityY(0);
+        }
+
+        if (player.sprite.body.velocity.x !== 0 ||
+            player.sprite.body.velocity.y !== 0) {
+            const currentTime = Date.now();
+            if (currentTime - lastSentTime > throttleInterval && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'player_move',
+                    id: myPlayerId,
+                    x: player.sprite.x,
+                    y: player.sprite.y
+                }));
+                this.lastSentTime = currentTime;
+            }
         }
     }
-    drawPlayers();
-    requestAnimationFrame(updatePlayerPosition);
-}
-
-document.addEventListener('keydown', (event) => {
-    if (event.key in heldKeys) {
-        heldKeys[event.key] = true;
-    }
-});
-
-document.addEventListener('keyup', (event) => {
-    if (event.key in heldKeys) {
-        heldKeys[event.key] = false;
-    }
-});
-
-function drawPlayers() {
-    const players = playerManager.getPlayers();
-    for (const [client_id, player] of Object.entries(players)) {
-        console.log("drawing player "+client_id);
-    }
-}
-
-// WebSocket logic
-// Determine WebSocket URL based on the environment
-let wsUrl;
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    wsUrl = "ws://localhost:8000/ws"; // Local server
-} else {
-    wsUrl = "wss://furryfrontiers.com/ws"; // Production server
-}
-
-let ws = new WebSocket(wsUrl);
-
-ws.onopen = function() {
-    console.log("WebSocket connection established");
-};
-
-ws.onmessage = function(event) {
-    handleMessage(event.data)
-};
-
-ws.onclose = function(event) {
-    console.log("WebSocket connection closed", event);
-};
-
-ws.onerror = function(error) {
-    console.error("WebSocket error:", error);
-};
-
-// Parse websocket JSON message
-function handleMessage(data) {
-    let msg = JSON.parse(data);
-
-    switch (msg.type) {
-
-        case "new_player":
-            const playerData = msg.player;
-            const playerId = msg.client_id;
-            const player = new Player(playerData.x, playerData.y, 5, playerData.name, playerData.color);
-            playerManager.addPlayer(playerId, player);
-            myClientId = playerId;
-            break;
-
-        case "chat_message":
-            displayMessage(msg.client_id, msg.data);
-            break;
-
-        case "update_players":
-            const players = msg.players;
-            for (const [id, playerData] of Object.entries(msg.players)) {
-                // skip myself because it will teleport me back a fraction of a second
-                if (id === myClientId) {
-                    continue;
-                }
-                if (playerManager.getPlayer(id)) {
-                    playerManager.updatePlayer(id, playerData.x, playerData.y);
-                } else {
-                    const newPlayer = new Player(playerData.x, playerData.y, 5, playerData.name, playerData.color);
-                    playerManager.addPlayer(id, newPlayer);
-                }
+    
+    addBackgroundMusic() {
+        // Add and play background music
+        this.backgroundMusic = this.sound.add('bgMusic');
+        // Add a click listener to start the music
+        this.input.once('pointerdown', () => {
+            if (!this.musicStarted) {
+                this.backgroundMusic.play({
+                    loop: true,
+                    volume: 0.25
+                });
+                this.musicStarted = true; // Update the flag
             }
-            break;
-
-        case "disconnect_player":
-            console.log("disconnect_player_message received");
-            playerManager.removePlayer(msg.client_id);
-            break;
-            
-        default:
-            console.log("Unknown message type. Message: ", msg);
-    }
-}
-
-// Form logic for chat box
-function sendMessage(event) {
-    event.preventDefault(); // Used to stop form reloading page
-    const message = document.getElementById("messageInput").value;
-    if (message) {
-        const data = JSON.stringify({
-            type: "chat_message",
-            data: message
         });
-        ws.send(data);
-        document.getElementById("messageInput").value = ''; // Clear the input field after sending the message
-    } else {
-        alert("Please enter a message to send");
+        // Also listen for keyboard interactions
+        this.input.keyboard.on('keydown', () => {
+            if (!this.musicStarted) {
+                this.backgroundMusic.play({
+                    loop: true,
+                    volume: 0.25
+                });
+                this.musicStarted = true; // Update the flag
+            }
+        });
     }
-    return false;
-}
-window.sendMessage = sendMessage; // Attach sendMessage to the window object to make it global
 
-function displayMessage(client_id, message) {
-    let messagesList = document.getElementById("messagesList");
-    let messageItem = document.createElement("li");
-    const playerName = playerManager.getPlayer(client_id).name
-    messageItem.textContent = playerName + ': ' + message;
-    messagesList.appendChild(messageItem);
+    drawPlayers() {
+        const players = this.playerManager.getPlayers();
+        for (const [client_id, player] of Object.entries(players)) {
+            // Draw player logic here
+        }
+    }
+
+    // NETWORKING FUNCTIONS
+    
+    createWebsocket() {
+        // NETWORKING LOGIC
+        // Determine WebSocket URL based on the environment
+        let wsUrl;
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            wsUrl = "ws://localhost:8000/ws"; // Local server
+        } else {
+            wsUrl = "wss://furryfrontiers.com/ws"; // Production server
+        }
+        let ws = new WebSocket(wsUrl);
+        ws.onopen = () => {
+            console.log("WebSocket Connection Established");
+        };
+        ws.onmessage = (event) => {
+            this.handleMessage(event.data);
+        };
+        ws.onclose = (event) => {
+            console.log("WebSocket Connection Closed", event);
+        };
+        ws.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
+        return ws;
+    }
+
+    sendMessage(event) {
+        console.log("SEND BUTTON CLICKED");
+        event.preventDefault(); // Used to stop form reloading page
+        const message = document.getElementById("messageInput").value;
+        if (message) {
+            const data = JSON.stringify({
+                type: "chat_message",
+                data: message
+            });
+            this.ws.send(data);
+            document.getElementById("messageInput").value = ''; // Clear the input field after sending the message
+        } else {
+            alert("Please enter a message to send");
+        }
+        return false;
+    }
+
+    displayMessage(client_id, message) {
+        let messagesList = document.getElementById("messagesList");
+        let messageItem = document.createElement("li");
+        messageItem.textContent = this.player.name + ': ' + message;
+        messagesList.appendChild(messageItem);
+    }
+
+    handleMessage(data) {
+        const message = JSON.parse(data);
+
+        switch (message.type) {
+            case "new_player": // message with client's character info
+                const newPlayerData = message.player_data;
+
+                // Create new Player object
+                const randBunnyTextureName = 'player'+String(Math.round(Math.random()*3));
+                const sprite = this.physics.add.sprite(newPlayerData.x, newPlayerData.y, randBunnyTextureName).setOrigin(0.5, 0.5).setDisplaySize(150, 150);
+                const newPlayer = new Player(sprite, NEW_PLAYER_SPEED, newPlayerData.name, newPlayerData.color);
+                
+                // Store new player
+                const newPlayerId = message.client_id;
+                this.player = newPlayer;
+                // this.otherPlayers[newPlayerId] = newPlayer;
+                // Store id
+                this.myPlayerId = newPlayerId;
+                
+                break;
+
+            case "chat_message":
+                this.displayMessage(message.client_id, message.data);
+                break;
+
+            case "update_players":
+                const playersData = message.players_data;
+                for (const [id, playerData] of Object.entries(playersData)) {
+                    if (id === this.myPlayerId) {
+                        continue;
+                    }
+                    if (this.otherPlayers[id]) {
+                        // Update existing player position
+                        this.otherPlayers[id].sprite.setPosition(playerData.x, playerData.y);
+                    } else {
+                        // Create new player
+                        const randBunnyTextureName = 'player'+String(Math.round(Math.random()*3));
+                        const sprite = this.physics.add.sprite(playerData.x, playerData.y, randBunnyTextureName).setOrigin(0.5, 0.5).setDisplaySize(150, 150);
+                        const newPlayer = new Player(sprite, playerData.speed, playerData.name, playerData.color);
+                        this.otherPlayers[id] = newPlayer;
+                    }
+                }
+                console.log("update players");
+                break;
+
+            case "disconnect_player":
+                console.log("disconnect_player_message received");
+                // this.playerManager.removePlayer(message.client_id);
+                break;
+
+            default:
+                console.log("Unknown message type. Message: ", message);
+        }
+    }
 }
 
-// Start the update loop
-requestAnimationFrame(updatePlayerPosition);
-drawPlayers();
+export const phaserConfig = {
+    type: Phaser.AUTO,
+    width: 1200,
+    height: 800,
+    parent: 'canvasContainer',
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 0 }
+        }
+    },
+    scene: [GameScene]
+};
+
+var game = new Phaser.Game(phaserConfig);
+
+export default GameScene;

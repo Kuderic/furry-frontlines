@@ -1,10 +1,9 @@
 const RAND_COLOR = `hsl(${Math.random() * 360}, 80%, 80%)`;
 
 export class Player {
-    constructor(x, y, speed, name, color=RAND_COLOR) {
-        this.x = x;
-        this.y = y;
-        this.speed = speed;
+    constructor(sprite, speed, name, color=RAND_COLOR) {
+        this.sprite = sprite;
+        this.speed = 300;
         this.name = name;
         this.color = color;
     }

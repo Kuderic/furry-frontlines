@@ -10,12 +10,12 @@
         <div id="header">
             <h1>😺 Furry Frontiers XV 😺</h1>
             <!-- <h2>(aka ff15 😿)</h2> -->
-            <h3>Use WASD to move</h3>
+            <h3>Use arrow keys to move</h3>
         </div>
-        <div id="canvasContainer">
+        <div id="canvasContainer" tabindex="-1">
             <script type="module" src="/static/js/main.js"></script>
             <div id="chatBox">
-                <form onsubmit="sendMessage(event)">
+                <form onsubmit="return sendMessage(event)">
                     <input type="text" id="messageInput" placeholder="Type your message here">
                     <input type="submit" value="Send">
                 </form>

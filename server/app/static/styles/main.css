@@ -21,7 +21,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 2px solid red;
+    /* border: 2px solid red; */
 
     ul {
         /* border: 3px solid darkblue; */
@@ -44,8 +44,6 @@ body {
     padding: 10px;
     border-radius: 5px;
 }
-
-#chatBox > .
 
 h1 {
     font-size: 3em;

@@ -84,7 +84,7 @@ async def websocket_endpoint(websocket: WebSocket):
             message  = json.loads(data)
             # print(f"Received message. JSON: {message}")
 
-            if message["type"] == "move":
+            if message["type"] == "player_move":
                 player_list[client_id].x = message["x"]
                 player_list[client_id].y = message["y"]
                 await broadcast_player_data()
@@ -120,14 +120,13 @@ async def send_new_player(websocket, client_id):
     await websocket.send_text(json.dumps({
         "type": "new_player",
         "client_id": client_id,
-        "player": player.to_dict()
+        "player_data": player.to_dict()
     }))
 
 async def broadcast_player_data():
     player_dict = {client_id: player.to_dict() for client_id, player in player_list.items()}
-    message_str = json.dumps({"type":
-                              "update_players",
-                              "players": player_dict
+    message_str = json.dumps({"type": "update_players",
+                              "players_data": player_dict
                             })
     for webSocket in connected_clients.values():
         await webSocket.send_text(message_str)
@@ -141,8 +140,7 @@ async def broadcast_message(client_id: str, message: str):
         await webSocket.send_text(message_str)
         
 async def broadcast_disconnect(client_id: str):
-    message_str = json.dumps({"type":
-                              "disconnect_player",
+    message_str = json.dumps({"type": "disconnect_player",
                               "client_id": client_id
                             })
     for webSocket in connected_clients.values():
