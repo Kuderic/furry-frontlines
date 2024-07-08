@@ -33,10 +33,10 @@ class GameScene extends Phaser.Scene {
         
     }
     addTouchControls() {
-        const leftButton = this.add.image(100, 200, 'leftButton').setInteractive();
-        const rightButton = this.add.image(300, 200, 'rightButton').setInteractive();
-        const upButton = this.add.image(200, 100, 'upButton').setInteractive();
-        const downButton = this.add.image(200, 300, 'downButton').setInteractive();
+        const leftButton = this.add.image(50, 125, 'leftButton').setInteractive();
+        const rightButton = this.add.image(200, 125, 'rightButton').setInteractive();
+        const upButton = this.add.image(125, 50, 'upButton').setInteractive();
+        const downButton = this.add.image(125, 200, 'downButton').setInteractive();
 
         leftButton.on('pointerdown', () => { this.moveLeft = true; });
         leftButton.on('pointerup', () => { this.moveLeft = false; });
@@ -59,17 +59,17 @@ class GameScene extends Phaser.Scene {
         let x = this.player.sprite.x;
         let y = this.player.sprite.y;
 
-        if (cursors.left.isDown) {
+        if (cursors.left.isDown || this.moveLeft) {
             player.sprite.setVelocityX(-1 * player.speed);
-        } else if (cursors.right.isDown) {
+        } else if (cursors.right.isDown || this.moveRight) {
             player.sprite.setVelocityX(1 * player.speed);
         } else {
             player.sprite.setVelocityX(0);
         }
 
-        if (cursors.up.isDown) {
+        if (cursors.up.isDown || this.moveUp) {
             player.sprite.setVelocityY(-1 * player.speed);
-        } else if (cursors.down.isDown) {
+        } else if (cursors.down.isDown || this.moveDown) {
             player.sprite.setVelocityY(1 * player.speed);
         } else {
             player.sprite.setVelocityY(0);
@@ -174,7 +174,7 @@ class GameScene extends Phaser.Scene {
                 const newPlayerData = message.player_data;
 
                 // Create new Player object
-                const randBunnyTextureName = 'player'+String(Math.round(Math.random()*3));
+                const randBunnyTextureName = 'player'+String(Math.floor(Math.random()*3));
                 const sprite = this.physics.add.sprite(newPlayerData.x, newPlayerData.y, randBunnyTextureName).setOrigin(0.5, 0.5).setDisplaySize(150, 150);
                 const newPlayer = new Player(sprite, NEW_PLAYER_SPEED, newPlayerData.name, newPlayerData.color);
                 
