@@ -5,7 +5,7 @@ const NEW_PLAYER_SPEED = 300;
 class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
-        this.player;
+        this.player = null;
         this.otherPlayers = {};
         this.myPlayerId = "";
         this.lastSentTime = 0;
@@ -13,10 +13,14 @@ class GameScene extends Phaser.Scene {
         this.musicStarted = false; // Flag to check if music has started
     }
     preload() {
-        this.load.image('player', 'static/images/bunny1.png'); // Replace with your player image path
+        this.load.image('player0', 'static/images/bunny1.png'); // Replace with your player image path
         this.load.image('player1', 'static/images/bunny2.png'); // Replace with your player image path
         this.load.image('player2', 'static/images/bunny3.png'); // Replace with your player image path
         this.load.audio('bgMusic', 'static/sounds/billie-eilish-meow.mp3'); // Load the background music
+        this.load.image('leftButton', 'static/images/leftButton.png'); // Load left button image
+        this.load.image('rightButton', 'static/images/rightButton.png'); // Load right button image
+        this.load.image('upButton', 'static/images/upButton.png'); // Load up button image
+        this.load.image('downButton', 'static/images/downButton.png'); // Load down button image
     }
     
     create() {
@@ -25,6 +29,26 @@ class GameScene extends Phaser.Scene {
         this.addBackgroundMusic();
         // Attach sendMessage to the window object
         window.sendMessage = this.sendMessage.bind(this);
+        this.addTouchControls();
+        
+    }
+    addTouchControls() {
+        const leftButton = this.add.image(100, 200, 'leftButton').setInteractive();
+        const rightButton = this.add.image(300, 200, 'rightButton').setInteractive();
+        const upButton = this.add.image(200, 100, 'upButton').setInteractive();
+        const downButton = this.add.image(200, 300, 'downButton').setInteractive();
+
+        leftButton.on('pointerdown', () => { this.moveLeft = true; });
+        leftButton.on('pointerup', () => { this.moveLeft = false; });
+
+        rightButton.on('pointerdown', () => { this.moveRight = true; });
+        rightButton.on('pointerup', () => { this.moveRight = false; });
+
+        upButton.on('pointerdown', () => { this.moveUp = true; });
+        upButton.on('pointerup', () => { this.moveUp = false; });
+
+        downButton.on('pointerdown', () => { this.moveDown = true; });
+        downButton.on('pointerup', () => { this.moveDown = false; });
     }
     
     update() {
@@ -89,13 +113,6 @@ class GameScene extends Phaser.Scene {
                 this.musicStarted = true; // Update the flag
             }
         });
-    }
-
-    drawPlayers() {
-        const players = this.playerManager.getPlayers();
-        for (const [client_id, player] of Object.entries(players)) {
-            // Draw player logic here
-        }
     }
 
     // NETWORKING FUNCTIONS
@@ -196,7 +213,9 @@ class GameScene extends Phaser.Scene {
 
             case "disconnect_player":
                 console.log("disconnect_player_message received");
-                // this.playerManager.removePlayer(message.client_id);
+                const disconnectId = message.client_id;
+                this.otherPlayers[disconnectId].sprite.destroy(); // Destroy the sprite
+                delete this.otherPlayers[disconnectId]; // Remove from dictionary
                 break;
 
             default:
