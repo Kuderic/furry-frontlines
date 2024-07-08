@@ -1,7 +1,7 @@
 body {
     color: darkblue;
     font-family: Arial, sans-serif;
-    background-color: lightgrey;
+    background-color: lightgoldenrodyellow;
     display: flex;
     flex-direction: column;
     justify-content: flex-start; /* Align items to the start of the flex container */

@@ -1,6 +1,6 @@
 import { Player } from './player.js';
 
-const NEW_PLAYER_SPEED = 300;
+const NEW_PLAYER_SPEED = 400;
 
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -226,9 +226,10 @@ class GameScene extends Phaser.Scene {
 
 export const phaserConfig = {
     type: Phaser.AUTO,
-    width: 1200,
-    height: 800,
+    width: 1600,
+    height: 900,
     parent: 'canvasContainer',
+    transparent: true,
     physics: {
         default: 'arcade',
         arcade: {
