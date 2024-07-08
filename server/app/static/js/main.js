@@ -1,4 +1,5 @@
 import { Player } from './player.js';
+// import rexvirtualjoystickplugin from './plugins/rexvirtualjoystickplugin.min.js';
 
 const NEW_PLAYER_SPEED = 400;
 
@@ -21,34 +22,45 @@ class GameScene extends Phaser.Scene {
         this.load.image('rightButton', 'static/images/rightButton.png'); // Load right button image
         this.load.image('upButton', 'static/images/upButton.png'); // Load up button image
         this.load.image('downButton', 'static/images/downButton.png'); // Load down button image
+        this.load.image('joystick', 'static/images/joystick.png');
+        this.load.plugin('rexvirtualjoystickplugin',
+            'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
+
     }
     
     create() {
+        // Attach sendMessage to the window object
+        window.sendMessage = this.sendMessage.bind(this);
         this.ws = this.createWebsocket();
         this.cursors = this.input.keyboard.createCursorKeys();
         this.addBackgroundMusic();
-        // Attach sendMessage to the window object
-        window.sendMessage = this.sendMessage.bind(this);
-        this.addTouchControls();
+
+        // Create movement joystick
+        this.movementJoyStick = this.plugins.get('rexvirtualjoystickplugin').add(this.scene, {
+            x: 100,
+            y: this.cameras.main.height - 125,
+            radius: 40,
+            forceMin: 0,
+            base: this.add.circle(0, 0, 60, 0x888888).setDepth(100).setAlpha(0.25),
+            thumb: this.add.image(0, 0, 'joystick').setDisplaySize(80, 80).setDepth(100).setAlpha(0.5),
+        }).on('update', () => {}, this)
         
-    }
-    addTouchControls() {
-        const leftButton = this.add.image(50, 125, 'leftButton').setInteractive();
-        const rightButton = this.add.image(200, 125, 'rightButton').setInteractive();
-        const upButton = this.add.image(125, 50, 'upButton').setInteractive();
-        const downButton = this.add.image(125, 200, 'downButton').setInteractive();
 
-        leftButton.on('pointerdown', () => { this.moveLeft = true; });
-        leftButton.on('pointerup', () => { this.moveLeft = false; });
+        // Move joysticks dynamically based on pointer-down
+        this.input.on('pointerdown', (pointer) => {
+            if (pointer.x <= this.cameras.main.width * 0.4) {
+                this.movementJoyStick.base.setPosition(pointer.x, pointer.y).setAlpha(0.5)
+                this.movementJoyStick.thumb.setPosition(pointer.x, pointer.y).setAlpha(1)
+            }
+        })
 
-        rightButton.on('pointerdown', () => { this.moveRight = true; });
-        rightButton.on('pointerup', () => { this.moveRight = false; });
-
-        upButton.on('pointerdown', () => { this.moveUp = true; });
-        upButton.on('pointerup', () => { this.moveUp = false; });
-
-        downButton.on('pointerdown', () => { this.moveDown = true; });
-        downButton.on('pointerup', () => { this.moveDown = false; });
+        // Add transparency to joysticks on pointer-up
+        this.input.on('pointerup', (pointer) => {
+            if (!this.movementJoyStick.force) {
+                this.movementJoyStick.base.setAlpha(0.15)
+                this.movementJoyStick.thumb.setAlpha(0.35)
+            }
+        })
     }
     
     update() {
@@ -226,10 +238,13 @@ class GameScene extends Phaser.Scene {
 
 export const phaserConfig = {
     type: Phaser.AUTO,
-    width: 1600,
-    height: 900,
+    width: 1200,
+    height: 720,
     parent: 'canvasContainer',
     transparent: true,
+    input: {
+      activePointers: 3, // 2 is default for mouse + pointer, +1 is required for dual touch
+    },
     physics: {
         default: 'arcade',
         arcade: {

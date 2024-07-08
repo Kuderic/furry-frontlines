@@ -21,7 +21,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* border: 2px solid red; */
+    border: 5px solid darkblue;
+    border-radius: 30px;
 
     ul {
         /* border: 3px solid darkblue; */
