@@ -29,8 +29,16 @@ class GameScene extends Phaser.Scene {
     }
     
     create() {
+        // Set world and camera bounds
+        const worldWidth = window.innerWidth;
+        const worldHeight = window.innerHeight;
+        this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
+        this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
+
         // Attach sendMessage to the window object
         window.sendMessage = this.sendMessage.bind(this);
+        window.stopPropagation = this.stopPropagation;
+        
         this.ws = this.createWebsocket();
         this.cursors = this.input.keyboard.createCursorKeys();
         this.addBackgroundMusic();
@@ -66,8 +74,17 @@ class GameScene extends Phaser.Scene {
     update() {
         if (!this.player) return;
 
-        const { cursors, player, players, ws, myPlayerId: myPlayerId, lastSentTime, throttleInterval } = this;
+        this.calculatePlayerVelocity();
+        
+        // Update the position of all players name tags
+        Object.keys(this.players).forEach(id => {
+                this.players[id].nameTag.setPosition(this.players[id].sprite.x, this.players[id].sprite.y - 20);
+            }
+        );
+    }
 
+    calculatePlayerVelocity() {
+        const { cursors, player, ws, myPlayerId: myPlayerId, lastSentTime, throttleInterval } = this;
         let x = this.player.sprite.x;
         let y = this.player.sprite.y;
 
@@ -87,6 +104,27 @@ class GameScene extends Phaser.Scene {
             player.sprite.setVelocityY(0);
         }
 
+        // Joystick movement
+        let forceX = 0
+        let forceY = 0;
+
+        if (this.movementJoyStick.forceX > 0) {
+            forceX = Math.min(this.movementJoyStick.forceX / 100, 1);
+        } else if (this.movementJoyStick.forceX < 0) {
+            forceX = Math.max(this.movementJoyStick.forceX / 100, -1);
+        }
+        if (this.movementJoyStick.forceY > 0) {
+            forceY = Math.min(this.movementJoyStick.forceY / 100, 1);
+        } else if (this.movementJoyStick.forceY < 0) {
+            forceY = Math.max(this.movementJoyStick.forceY / 100, -1);
+        }
+        // console.log(forceX, forceY);
+
+        if (forceX || forceY) {
+            player.sprite.setVelocityX(forceX * player.speed);
+            player.sprite.setVelocityY(forceY * player.speed);
+        }
+
         if (player.sprite.body.velocity.x !== 0 ||
             player.sprite.body.velocity.y !== 0) {
             const currentTime = Date.now();
@@ -100,12 +138,6 @@ class GameScene extends Phaser.Scene {
                 this.lastSentTime = currentTime;
             }
         }
-        
-        // Update the position of the name tags
-        Object.keys(this.players).forEach(id => {
-                this.players[id].nameTag.setPosition(this.players[id].sprite.x, this.players[id].sprite.y - 20);
-            }
-        );
     }
     
     addBackgroundMusic() {
@@ -195,6 +227,7 @@ class GameScene extends Phaser.Scene {
                 // Create new Player object
                 const randBunnyTextureName = 'player'+String(Math.floor(Math.random()*3));
                 const sprite = this.physics.add.sprite(newPlayerData.x, newPlayerData.y, randBunnyTextureName).setOrigin(0.5, 0.5).setDisplaySize(150, 150);
+                sprite.setCollideWorldBounds(true)
                 // Create name tag
                 const nameTag = this.add.text(newPlayerData.x, newPlayerData.y - 200, newPlayerData.name, { fontSize: '32px', fill: '#000' }).setOrigin(0.5);
                 const newPlayer = new Player(sprite, NEW_PLAYER_SPEED, newPlayerData.name, newPlayerData.color, nameTag);
@@ -224,6 +257,7 @@ class GameScene extends Phaser.Scene {
                         // Create new player
                         const randBunnyTextureName = 'player'+String(Math.floor(Math.random()*3));
                         const sprite = this.physics.add.sprite(playerData.x, playerData.y, randBunnyTextureName).setOrigin(0.5, 0.5).setDisplaySize(150, 150);
+                        sprite.setCollideWorldBounds(true)
                         // Create name tag
                         const nameTag = this.add.text(playerData.x, playerData.y - 200, playerData.name, { fontSize: '32px', fill: '#000' }).setOrigin(0.5);
                         const newPlayer = new Player(sprite, NEW_PLAYER_SPEED, playerData.name, playerData.color, nameTag);
