@@ -171,10 +171,16 @@ class GameScene extends Phaser.Scene {
         return false;
     }
 
-    displayMessage(client_id, message) {
+    displayMessage(playerId, message) {
         let messagesList = document.getElementById("messagesList");
         let messageItem = document.createElement("li");
-        messageItem.textContent = this.player.name + ': ' + message;
+        let name = "";
+        if (playerId === this.myPlayerId) {
+            name = this.player.name;
+        } else {
+            name = this.otherPlayers[playerId].name;
+        }
+        messageItem.textContent = name + ': ' + message;
         messagesList.appendChild(messageItem);
     }
 
@@ -214,7 +220,7 @@ class GameScene extends Phaser.Scene {
                         this.otherPlayers[id].sprite.setPosition(playerData.x, playerData.y);
                     } else {
                         // Create new player
-                        const randBunnyTextureName = 'player'+String(Math.round(Math.random()*3));
+                        const randBunnyTextureName = 'player'+String(Math.floor(Math.random()*3));
                         const sprite = this.physics.add.sprite(playerData.x, playerData.y, randBunnyTextureName).setOrigin(0.5, 0.5).setDisplaySize(150, 150);
                         const newPlayer = new Player(sprite, playerData.speed, playerData.name, playerData.color);
                         this.otherPlayers[id] = newPlayer;
@@ -238,10 +244,13 @@ class GameScene extends Phaser.Scene {
 
 export const phaserConfig = {
     type: Phaser.AUTO,
-    width: 1200,
-    height: 720,
-    parent: 'canvasContainer',
-    transparent: true,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    parent: 'gameContainer',
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
     input: {
       activePointers: 3, // 2 is default for mouse + pointer, +1 is required for dual touch
     },
@@ -251,9 +260,14 @@ export const phaserConfig = {
             gravity: { y: 0 }
         }
     },
+    transparent: true,
     scene: [GameScene]
 };
 
-var game = new Phaser.Game(phaserConfig);
+const game = new Phaser.Game(phaserConfig);
+
+window.addEventListener('resize', () => {
+    game.scale.resize(window.innerWidth, window.innerHeight);
+});
 
 export default GameScene;

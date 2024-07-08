@@ -2,11 +2,20 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width, user-scalable=no, minimal-ui">
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="full-screen" content="yes" />
+        <meta name="screen-orientation" content="landscape" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>ff15</title>
         <link rel="stylesheet" type="text/css" href="/static/styles/main.css">
         <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
         <script src="//cdn.jsdelivr.net/npm/phaser@3.80.0/dist/phaser.min.js"></script>
+        <script type="text/javascript">
+          window.onorientationchange = function() {
+            window.location.reload();
+          }
+        </script>
+        <script type="module" src="/static/js/main.js"></script>
     </head>
     <body>
         <div id="header">
@@ -14,8 +23,7 @@
             <!-- <h2>(aka ff15 😿)</h2> -->
             <h3>Use arrow keys to move</h3>
         </div>
-        <div id="canvasContainer" tabindex="-1">
-            <script type="module" src="/static/js/main.js"></script>
+        <div id="gameContainer" tabindex="-1">
             <div id="chatBox">
                 <form onsubmit="return sendMessage(event)">
                     <input type="text" id="messageInput" placeholder="Type your message here">
