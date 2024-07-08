@@ -7,7 +7,7 @@ class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
         this.player = null;
-        this.otherPlayers = {};
+        this.players = {};
         this.myPlayerId = "";
         this.lastSentTime = 0;
         this.throttleInterval = 100; // 10 updates per second
@@ -66,7 +66,7 @@ class GameScene extends Phaser.Scene {
     update() {
         if (!this.player) return;
 
-        const { cursors, player, ws, myPlayerId: myPlayerId, playerManager, lastSentTime, throttleInterval } = this;
+        const { cursors, player, players, ws, myPlayerId: myPlayerId, lastSentTime, throttleInterval } = this;
 
         let x = this.player.sprite.x;
         let y = this.player.sprite.y;
@@ -100,6 +100,12 @@ class GameScene extends Phaser.Scene {
                 this.lastSentTime = currentTime;
             }
         }
+        
+        // Update the position of the name tags
+        Object.keys(this.players).forEach(id => {
+                this.players[id].nameTag.setPosition(this.players[id].sprite.x, this.players[id].sprite.y - 20);
+            }
+        );
     }
     
     addBackgroundMusic() {
@@ -174,12 +180,7 @@ class GameScene extends Phaser.Scene {
     displayMessage(playerId, message) {
         let messagesList = document.getElementById("messagesList");
         let messageItem = document.createElement("li");
-        let name = "";
-        if (playerId === this.myPlayerId) {
-            name = this.player.name;
-        } else {
-            name = this.otherPlayers[playerId].name;
-        }
+        let name = this.players[playerId].name;
         messageItem.textContent = name + ': ' + message;
         messagesList.appendChild(messageItem);
     }
@@ -194,14 +195,15 @@ class GameScene extends Phaser.Scene {
                 // Create new Player object
                 const randBunnyTextureName = 'player'+String(Math.floor(Math.random()*3));
                 const sprite = this.physics.add.sprite(newPlayerData.x, newPlayerData.y, randBunnyTextureName).setOrigin(0.5, 0.5).setDisplaySize(150, 150);
-                const newPlayer = new Player(sprite, NEW_PLAYER_SPEED, newPlayerData.name, newPlayerData.color);
+                // Create name tag
+                const nameTag = this.add.text(newPlayerData.x, newPlayerData.y - 200, newPlayerData.name, { fontSize: '32px', fill: '#000' }).setOrigin(0.5);
+                const newPlayer = new Player(sprite, NEW_PLAYER_SPEED, newPlayerData.name, newPlayerData.color, nameTag);
                 
                 // Store new player
                 const newPlayerId = message.client_id;
-                this.player = newPlayer;
-                // this.otherPlayers[newPlayerId] = newPlayer;
-                // Store id
                 this.myPlayerId = newPlayerId;
+                this.player = newPlayer;
+                this.players[this.myPlayerId] = newPlayer;
                 
                 break;
 
@@ -212,18 +214,20 @@ class GameScene extends Phaser.Scene {
             case "update_players":
                 const playersData = message.players_data;
                 for (const [id, playerData] of Object.entries(playersData)) {
-                    if (id === this.myPlayerId) {
-                        continue;
-                    }
-                    if (this.otherPlayers[id]) {
+                    if (this.players[id]) {
                         // Update existing player position
-                        this.otherPlayers[id].sprite.setPosition(playerData.x, playerData.y);
+                        if (id === this.myPlayerId) {
+                            continue;
+                        }
+                        this.players[id].sprite.setPosition(playerData.x, playerData.y);
                     } else {
                         // Create new player
                         const randBunnyTextureName = 'player'+String(Math.floor(Math.random()*3));
                         const sprite = this.physics.add.sprite(playerData.x, playerData.y, randBunnyTextureName).setOrigin(0.5, 0.5).setDisplaySize(150, 150);
-                        const newPlayer = new Player(sprite, playerData.speed, playerData.name, playerData.color);
-                        this.otherPlayers[id] = newPlayer;
+                        // Create name tag
+                        const nameTag = this.add.text(playerData.x, playerData.y - 200, playerData.name, { fontSize: '32px', fill: '#000' }).setOrigin(0.5);
+                        const newPlayer = new Player(sprite, NEW_PLAYER_SPEED, playerData.name, playerData.color, nameTag);
+                        this.players[id] = newPlayer;
                     }
                 }
                 console.log("update players");
@@ -232,8 +236,9 @@ class GameScene extends Phaser.Scene {
             case "disconnect_player":
                 console.log("disconnect_player_message received");
                 const disconnectId = message.client_id;
-                this.otherPlayers[disconnectId].sprite.destroy(); // Destroy the sprite
-                delete this.otherPlayers[disconnectId]; // Remove from dictionary
+                this.players[disconnectId].sprite.destroy(); // Destroy the sprite
+                this.players[disconnectId].nameTag.destroy(); // Destroy the sprite
+                delete this.players[disconnectId]; // Remove from dictionary
                 break;
 
             default:
