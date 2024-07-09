@@ -16,6 +16,7 @@ class GameScene extends Phaser.Scene {
         this.lastSentTime = 0;
         this.throttleInterval = 100; // 10 updates per second
         this.musicStarted = false; // Flag to check if music has started
+        this.lastSentPlayerInfo = {}; // keep track of player state on server. if doesnt match, then send 
     }
     preload() {
         this.load.image('grass1', 'static/images/margarass.png');
@@ -112,9 +113,6 @@ class GameScene extends Phaser.Scene {
     calculatePlayerVelocity() {
         const { cursors, player, ws, myPlayerId: myPlayerId, lastSentTime, throttleInterval } = this;
 
-        const oldVelocityX = player.sprite.body.velocity.x;
-        const oldVelocityY = player.sprite.body.velocity.y;
-
         if (cursors.left.isDown || this.moveLeft) {
             player.sprite.setVelocityX(-1 * player.speed);
         } else if (cursors.right.isDown || this.moveRight) {
@@ -152,8 +150,8 @@ class GameScene extends Phaser.Scene {
             player.sprite.setVelocityY(forceY * player.speed);
         }
 
-        if (player.sprite.body.velocity.x !== oldVelocityX ||
-            player.sprite.body.velocity.y !== oldVelocityY) {
+        if (player.sprite.body.velocity.x !== this.lastSentPlayerInfo.velocity_x ||
+            player.sprite.body.velocity.y !== this.lastSentPlayerInfo.velocity_y) {
             const currentTime = Date.now();
             if (currentTime - lastSentTime > throttleInterval && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -164,6 +162,14 @@ class GameScene extends Phaser.Scene {
                     velocity_x: player.sprite.body.velocity.x,
                     velocity_y: player.sprite.body.velocity.y
                 }));
+                
+                this.lastSentPlayerInfo = {
+                    x: player.sprite.x,
+                    y: player.sprite.y,
+                    velocity_x: player.sprite.body.velocity.x,
+                    velocity_y: player.sprite.body.velocity.y
+                }
+                
                 this.lastSentTime = currentTime;
             }
         }
