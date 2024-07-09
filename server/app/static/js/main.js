@@ -4,7 +4,7 @@ import { GrassGenerator } from './grassGenerator.js';
 // import rexvirtualjoystickplugin from './plugins/rexvirtualjoystickplugin.min.js';
 
 const NEW_PLAYER_SPEED = 400;
-let WORLD_WIDTH = 2000;
+let WORLD_WIDTH = 2500;
 let WORLD_HEIGHT = 2000;
 
 class GameScene extends Phaser.Scene {
@@ -37,6 +37,7 @@ class GameScene extends Phaser.Scene {
         // Set world and camera bounds
         this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
         this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        this.scale.on('resize', this.resize, this);
             
         // Generate grass under the bunny layer
         const gg = new GrassGenerator(this); // Adjust density as needed
@@ -76,6 +77,16 @@ class GameScene extends Phaser.Scene {
                 this.movementJoyStick.thumb.setAlpha(0.35)
             }
         })
+    }
+    
+    resize(gameSize, baseSize, displaySize, resolution) {
+        const width = gameSize.width;
+        const height = gameSize.height;
+    
+        this.cameras.resize(width, height);
+    
+        // If you have UI elements or other game objects that need manual adjustment:
+        // this.yourUIElement.setPosition(width / 2, height - 50); // Example: reposition an element
     }
     
     update() {
@@ -286,10 +297,10 @@ class GameScene extends Phaser.Scene {
 export const phaserConfig = {
     type: Phaser.AUTO,
     parent: 'gameContainer',
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: 800,
+    height: 600,
     scale: {
-        mode: Phaser.Scale.FIT, // Resize the game to fit the parent size while maintaining aspect ratio
+        mode: Phaser.Scale.RESIZE,  // Adjust to RESIZE to have the canvas resize dynamically
         autoCenter: Phaser.Scale.CENTER_BOTH // Center the game canvas in the parent
     },
     input: {

@@ -12,7 +12,7 @@ export class GrassGenerator {
             const y = Phaser.Math.Between(0, this.scene.physics.world.bounds.height);
             const grassType = `grass${Phaser.Math.Between(1, this.numGrassTypes)}`; // Assuming you have 2 grass types
             const grass = this.scene.add.image(x, y, grassType);
-            grass.setDisplaySize(150, 150);
+            grass.setDisplaySize(300, 300);
             grass.setDepth(-1); // Set depth below the bunny layer
         }
     }
