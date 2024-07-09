@@ -1,7 +1,11 @@
 import { Player } from './player.js';
+import { GrassGenerator } from './grassGenerator.js';
+// import './plugins/phaser.js';
 // import rexvirtualjoystickplugin from './plugins/rexvirtualjoystickplugin.min.js';
 
 const NEW_PLAYER_SPEED = 400;
+let WORLD_WIDTH = 2000;
+let WORLD_HEIGHT = 2000;
 
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -14,6 +18,7 @@ class GameScene extends Phaser.Scene {
         this.musicStarted = false; // Flag to check if music has started
     }
     preload() {
+        this.load.image('grass1', 'static/images/margarass.png');
         this.load.image('player0', 'static/images/bunny1.png'); // Replace with your player image path
         this.load.image('player1', 'static/images/bunny2.png'); // Replace with your player image path
         this.load.image('player2', 'static/images/bunny3.png'); // Replace with your player image path
@@ -30,10 +35,12 @@ class GameScene extends Phaser.Scene {
     
     create() {
         // Set world and camera bounds
-        const worldWidth = window.innerWidth;
-        const worldHeight = window.innerHeight;
-        this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
-        this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
+        this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+            
+        // Generate grass under the bunny layer
+        const gg = new GrassGenerator(this); // Adjust density as needed
+        gg.generateGrass();
 
         // Attach sendMessage to the window object
         window.sendMessage = this.sendMessage.bind(this);
@@ -72,6 +79,8 @@ class GameScene extends Phaser.Scene {
     }
     
     update() {
+        const worldBounds = this.physics.world.bounds;
+        console.log(`World Bounds: x=${worldBounds.x}, y=${worldBounds.y}, width=${worldBounds.width}, height=${worldBounds.height}`);
         if (!this.player) return;
 
         this.calculatePlayerVelocity();
@@ -225,12 +234,7 @@ class GameScene extends Phaser.Scene {
                 const newPlayerData = message.player_data;
 
                 // Create new Player object
-                const randBunnyTextureName = 'player'+String(Math.floor(Math.random()*3));
-                const sprite = this.physics.add.sprite(newPlayerData.x, newPlayerData.y, randBunnyTextureName).setOrigin(0.5, 0.5).setDisplaySize(150, 150);
-                sprite.setCollideWorldBounds(true)
-                // Create name tag
-                const nameTag = this.add.text(newPlayerData.x, newPlayerData.y - 200, newPlayerData.name, { fontSize: '32px', fill: '#000' }).setOrigin(0.5);
-                const newPlayer = new Player(sprite, NEW_PLAYER_SPEED, newPlayerData.name, newPlayerData.color, nameTag);
+                const newPlayer = new Player(this, newPlayerData.x, newPlayerData.y, NEW_PLAYER_SPEED, newPlayerData.name, newPlayerData.color);
                 
                 // Store new player
                 const newPlayerId = message.client_id;
@@ -238,6 +242,9 @@ class GameScene extends Phaser.Scene {
                 this.player = newPlayer;
                 this.players[this.myPlayerId] = newPlayer;
                 
+                // // Set up the camera
+                // this.cameras.main.setBounds(0, 0, WORLD_HEIGHT, WORLD_WIDTH); // Set the boundaries of the camera
+                this.cameras.main.startFollow(this.player.sprite, true); // Make the camera follow the player
                 break;
 
             case "chat_message":
@@ -283,12 +290,12 @@ class GameScene extends Phaser.Scene {
 
 export const phaserConfig = {
     type: Phaser.AUTO,
+    parent: 'gameContainer',
     width: window.innerWidth,
     height: window.innerHeight,
-    parent: 'gameContainer',
     scale: {
-        mode: Phaser.Scale.RESIZE,
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        mode: Phaser.Scale.FIT, // Resize the game to fit the parent size while maintaining aspect ratio
+        autoCenter: Phaser.Scale.CENTER_BOTH // Center the game canvas in the parent
     },
     input: {
       activePointers: 3, // 2 is default for mouse + pointer, +1 is required for dual touch
@@ -296,6 +303,7 @@ export const phaserConfig = {
     physics: {
         default: 'arcade',
         arcade: {
+            debug: true,
             gravity: { y: 0 }
         }
     },
