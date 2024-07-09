@@ -19,6 +19,7 @@ class GameScene extends Phaser.Scene {
         this.lastSentPlayerInfo = {}; // keep track of player state on server. if doesnt match, then send 
     }
     preload() {
+        this.load.bitmapFont('rainyhearts', 'static/fonts/rainyhearts_0.png', 'static/fonts/rainyhearts.fnt');
         this.load.image('grass1', 'static/images/margarass.png');
         this.load.image('player0', 'static/images/bunny1.png'); // Replace with your player image path
         this.load.image('player1', 'static/images/bunny2.png'); // Replace with your player image path
@@ -35,13 +36,18 @@ class GameScene extends Phaser.Scene {
     }
     
     create() {
+        // Debug tools
+        this.fpsText = this.add.bitmapText(100, 50, 'rainyhearts', '', 40).setOrigin(0.5);
+        this.fpsText.tint = 0xff0000;
+
         // Set world and camera bounds
         this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
         this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
         this.scale.on('resize', this.resize, this);
-        
-        // Debug tools
-        this.fpsText = this.add.text(10, 10, '', { font: '16px Arial', fill: '#ffffff' });
+
+        // Create graphics
+        this.graphics = this.add.graphics({ lineStyle: { width: 1, color: 0xff00ff }, fillStyle: { color: 0xff00ff } });
+        this.arrowGraphics = this.add.graphics({ lineStyle: { width: 2, color: 0xffffff } });
 
         // Generate grass under the bunny layer
         const gg = new GrassGenerator(this); // Adjust density as needed
@@ -51,7 +57,9 @@ class GameScene extends Phaser.Scene {
         window.sendMessage = this.sendMessage.bind(this);
         window.stopPropagation = this.stopPropagation;
         
+        // Create websocket
         this.ws = this.createWebsocket();
+
         this.cursors = this.input.keyboard.createCursorKeys();
         this.addBackgroundMusic();
 
@@ -68,7 +76,7 @@ class GameScene extends Phaser.Scene {
 
         // Move joysticks dynamically based on pointer-down
         this.input.on('pointerdown', (pointer) => {
-            if (pointer.x <= this.cameras.main.width * 0.4) {
+            if (pointer.x <= this.cameras.main.width * 0.7) {
                 this.movementJoyStick.base.setPosition(pointer.x, pointer.y).setAlpha(0.5)
                 this.movementJoyStick.thumb.setPosition(pointer.x, pointer.y).setAlpha(1)
             }
@@ -97,8 +105,6 @@ class GameScene extends Phaser.Scene {
         // Debug
         this.fpsText.setText('FPS: ' + this.game.loop.actualFps.toFixed(2));
 
-        const worldBounds = this.physics.world.bounds;
-        console.log(`World Bounds: x=${worldBounds.x}, y=${worldBounds.y}, width=${worldBounds.width}, height=${worldBounds.height}`);
         if (!this.player) return;
 
         this.calculatePlayerVelocity();
@@ -108,6 +114,42 @@ class GameScene extends Phaser.Scene {
                 this.players[id].nameTag.setPosition(this.players[id].sprite.x, this.players[id].sprite.y - 20);
             }
         );
+        // this.graphics.clear();
+        // Object.keys(this.players).forEach(id => {
+        //     const player = this.players[id];
+        //     const bbox = player.sprite.getBounds();
+        //     this.graphics.strokeRectShape(bbox);
+        //     const tagBox = player.nameTag.getBounds();
+        //     this.graphics.strokeRectShape(tagBox);
+        // });
+
+        // Draw player direction indicator
+        // Assuming 'player' is your player sprite
+        const player = this.player;
+        const angle = player.rotation; // Player's current rotation in radians
+
+        // Clear previous graphics
+        this.arrowGraphics.clear();
+
+        // Draw arc around the player
+        this.arrowGraphics.strokeCircle(player.x, player.y, 50); // Draw a circle with radius 50 pixels
+
+        // Calculate arrow points based on player's angle
+        const endX = player.x + 100 * Math.cos(angle); // Extend the arrow out 60 pixels from player
+        const endY = player.y + 100 * Math.sin(angle);
+        const startX = player.x + 100 * Math.cos(angle); // Start the arrow a bit away from player center
+        const startY = player.y + 100 * Math.sin(angle);
+
+        // Draw the line for the arrow
+        this.arrowGraphics.lineBetween(startX, startY, endX, endY);
+
+        // Draw arrow head
+        const arrowAngle = 0.5; // Angle of the arrow head in radians
+        const arrowLength = 10; // Length of the sides of the arrow head
+        this.arrowGraphics.lineBetween(endX, endY,
+            endX - arrowLength * Math.cos(angle - arrowAngle), endY - arrowLength * Math.sin(angle - arrowAngle));
+        this.arrowGraphics.lineBetween(endX, endY,
+            endX - arrowLength * Math.cos(angle + arrowAngle), endY - arrowLength * Math.sin(angle + arrowAngle));
     }
 
     calculatePlayerVelocity() {
@@ -254,7 +296,7 @@ class GameScene extends Phaser.Scene {
 
     handleMessage(data) {
         const message = JSON.parse(data);
-        console.log(message);
+        // console.log(message);
 
         switch (message.type) {
             case "new_player": // message with client's character info
@@ -271,7 +313,7 @@ class GameScene extends Phaser.Scene {
                 
                 // // Set up the camera
                 // this.cameras.main.setBounds(0, 0, WORLD_HEIGHT, WORLD_WIDTH); // Set the boundaries of the camera
-                this.cameras.main.startFollow(this.player.sprite, true); // Make the camera follow the player
+                this.cameras.main.startFollow(this.player.sprite, true, 0.1, .1); // Make the camera follow the player
                 break;
 
             case "chat_message":
@@ -295,7 +337,6 @@ class GameScene extends Phaser.Scene {
                         this.players[id] = newPlayer;
                     }
                 }
-                console.log("update players");
                 break;
 
             case "disconnect_player":
@@ -327,7 +368,7 @@ export const phaserConfig = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true,
+            debug: false,
             gravity: { y: 0 }
         }
     },

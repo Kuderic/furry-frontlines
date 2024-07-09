@@ -6,11 +6,11 @@ export class Player {
     constructor(scene, x, y, speed, name, color=RAND_COLOR) {
         // Create sprite
         const randBunnyTextureName = 'player'+String(Math.floor(Math.random()*3));
-        const sprite = scene.physics.add.sprite(x, y, randBunnyTextureName).setOrigin(0.5, 0.5).setDisplaySize(150, 150);
+        const sprite = scene.physics.add.sprite(x, y, randBunnyTextureName).setOrigin(0.5, 0.5).setDisplaySize(125, 125);
         sprite.setCollideWorldBounds(true)
         
         // Create name tag
-        const nameTag = scene.add.text(x, y - 200, name, { fontSize: '24px', fill: '#000' }).setOrigin(0.5);
+        const nameTag = scene.add.bitmapText(x, y - 200, 'rainyhearts', name, 40).setOrigin(0.5);
 
         this.sprite = sprite;
         this.speed = speed;
