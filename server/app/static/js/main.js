@@ -248,6 +248,7 @@ class GameScene extends Phaser.Scene {
 
     handleMessage(data) {
         const message = JSON.parse(data);
+        console.log(message);
 
         switch (message.type) {
             case "new_player": // message with client's character info
