@@ -262,12 +262,7 @@ class GameScene extends Phaser.Scene {
                         this.players[id].sprite.setPosition(playerData.x, playerData.y);
                     } else {
                         // Create new player
-                        const randBunnyTextureName = 'player'+String(Math.floor(Math.random()*3));
-                        const sprite = this.physics.add.sprite(playerData.x, playerData.y, randBunnyTextureName).setOrigin(0.5, 0.5).setDisplaySize(150, 150);
-                        sprite.setCollideWorldBounds(true)
-                        // Create name tag
-                        const nameTag = this.add.text(playerData.x, playerData.y - 200, playerData.name, { fontSize: '32px', fill: '#000' }).setOrigin(0.5);
-                        const newPlayer = new Player(sprite, NEW_PLAYER_SPEED, playerData.name, playerData.color, nameTag);
+                        const newPlayer = new Player(this, playerData.x, playerData.y, NEW_PLAYER_SPEED, playerData.name, playerData.color);
                         this.players[id] = newPlayer;
                     }
                 }
