@@ -14,6 +14,8 @@ class Player():
     def __init__(self, x, y, name):
         self.x = x
         self.y = y
+        self.velocity_x = 0
+        self.velocity_y = 0
         self.name = name
         rand_hue = randint(0,255)
         self.color = f"hsl({rand_hue}, 100%, 80%)"
@@ -22,6 +24,8 @@ class Player():
         return {
             "x": self.x,
             "y": self.y,
+            "velocity_x": self.velocity_x,
+            "velocity_y": self.velocity_y,
             "name": self.name,
             "color": self.color
         }
@@ -87,6 +91,8 @@ async def websocket_endpoint(websocket: WebSocket):
             if message["type"] == "player_move":
                 player_list[client_id].x = message["x"]
                 player_list[client_id].y = message["y"]
+                player_list[client_id].velocity_x = message["velocity_x"]
+                player_list[client_id].velocity_y = message["velocity_y"]
                 await broadcast_player_data()
             elif (message['type'] == "chat_message"):
                 await broadcast_message(client_id, message["data"])

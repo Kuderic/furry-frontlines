@@ -38,7 +38,10 @@ class GameScene extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
         this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
         this.scale.on('resize', this.resize, this);
-            
+        
+        // Debug tools
+        this.fpsText = this.add.text(10, 10, '', { font: '16px Arial', fill: '#ffffff' });
+
         // Generate grass under the bunny layer
         const gg = new GrassGenerator(this); // Adjust density as needed
         gg.generateGrass();
@@ -90,6 +93,9 @@ class GameScene extends Phaser.Scene {
     }
     
     update() {
+        // Debug
+        this.fpsText.setText('FPS: ' + this.game.loop.actualFps.toFixed(2));
+
         const worldBounds = this.physics.world.bounds;
         console.log(`World Bounds: x=${worldBounds.x}, y=${worldBounds.y}, width=${worldBounds.width}, height=${worldBounds.height}`);
         if (!this.player) return;
@@ -105,8 +111,9 @@ class GameScene extends Phaser.Scene {
 
     calculatePlayerVelocity() {
         const { cursors, player, ws, myPlayerId: myPlayerId, lastSentTime, throttleInterval } = this;
-        let x = this.player.sprite.x;
-        let y = this.player.sprite.y;
+
+        const oldVelocityX = player.sprite.body.velocity.x;
+        const oldVelocityY = player.sprite.body.velocity.y;
 
         if (cursors.left.isDown || this.moveLeft) {
             player.sprite.setVelocityX(-1 * player.speed);
@@ -145,15 +152,17 @@ class GameScene extends Phaser.Scene {
             player.sprite.setVelocityY(forceY * player.speed);
         }
 
-        if (player.sprite.body.velocity.x !== 0 ||
-            player.sprite.body.velocity.y !== 0) {
+        if (player.sprite.body.velocity.x !== oldVelocityX ||
+            player.sprite.body.velocity.y !== oldVelocityY) {
             const currentTime = Date.now();
             if (currentTime - lastSentTime > throttleInterval && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: 'player_move',
                     id: myPlayerId,
                     x: player.sprite.x,
-                    y: player.sprite.y
+                    y: player.sprite.y,
+                    velocity_x: player.sprite.body.velocity.x,
+                    velocity_y: player.sprite.body.velocity.y
                 }));
                 this.lastSentTime = currentTime;
             }
@@ -271,6 +280,8 @@ class GameScene extends Phaser.Scene {
                             continue;
                         }
                         this.players[id].sprite.setPosition(playerData.x, playerData.y);
+                        this.players[id].sprite.setVelocityX(playerData.velocity_x);
+                        this.players[id].sprite.setVelocityY(playerData.velocity_y);
                     } else {
                         // Create new player
                         const newPlayer = new Player(this, playerData.x, playerData.y, NEW_PLAYER_SPEED, playerData.name, playerData.color);
@@ -312,6 +323,13 @@ export const phaserConfig = {
             debug: true,
             gravity: { y: 0 }
         }
+    },
+    fps: {
+        min: 10,
+        target: 60,
+        forceSetTimeOut: false,
+        deltaHistory: 10,
+        panicMax: 120
     },
     transparent: true,
     scene: [GameScene]
