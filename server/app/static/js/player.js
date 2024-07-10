@@ -36,14 +36,14 @@ export class Player {
         // Update nametag position
         this.nameTag.setPosition(this.sprite.x, this.sprite.y - 20);
 
-        if (this.bubble.visible) {
-            // Keep the bubble positioned above the player
-            this.bubbleText.x = this.sprite.x - this.bubbleText.width / 2;
-            this.bubbleText.y = this.sprite.y - this.bubble.height - 60;
+        // if (this.bubble.visible) {
+        //     // Keep the bubble positioned above the player
+        //     this.bubbleText.x = this.sprite.x - this.bubbleText.width / 2;
+        //     this.bubbleText.y = this.sprite.y - this.bubble.height - 60;
 
-            this.bubble.x = this.bubbleText.x - 5;
-            this.bubble.y = this.bubbleText.y - 5;
-        }
+        //     this.bubble.x = this.bubbleText.x - 5;
+        //     this.bubble.y = this.bubbleText.y - 5;
+        // }
     }
 
     say(message) {

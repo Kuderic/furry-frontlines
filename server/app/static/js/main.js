@@ -356,7 +356,7 @@ class GameScene extends Phaser.Scene {
         // Create a timestamp
         let timestamp = new Date().toLocaleTimeString(); // This gives you a human-readable time format
         // Include the timestamp in the message text
-        messageItem.textContent = `[${timestamp}]: ${message}`;
+        messageItem.textContent = `[${timestamp}] ${message}`;
         // Append the message item to the list
         messagesList.appendChild(messageItem);
         scrollToBottom();
@@ -388,6 +388,7 @@ class GameScene extends Phaser.Scene {
 
             case "chat_message":
                 this.displayMessage(message.client_id, message.data);
+                scrollToBottom();
                 break;
 
             case "update_players":
