@@ -15,7 +15,7 @@ class GameScene extends Phaser.Scene {
         this.players = {};
         this.myPlayerId = "";
         this.lastSentTime = 0;
-        this.throttleInterval = 50; // 10 updates per second
+        this.throttleInterval = 200; // 5 updates per second
         this.musicStarted = false; // Flag to check if music has started
         this.lastSentPlayerInfo = {}; // keep track of player state on server. if doesnt match, then send 
     }
@@ -39,16 +39,10 @@ class GameScene extends Phaser.Scene {
         // Access the UI scene
         this.uiScene = this.scene.get('UIScene');
 
-        this.createChatBox();
-
         // Set world and camera bounds
         this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
         this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
         this.scale.on('resize', this.resize, this);
-
-        // Create graphics
-        this.graphics = this.add.graphics({ lineStyle: { width: 1, color: 0xff00ff }, fillStyle: { color: 0xff00ff } });
-        this.arrowGraphics = this.add.graphics({ lineStyle: { width: 2, color: 0xffffff } });
 
         // Generate grass under the bunny layer
         const gg = new GrassGenerator(this); // Adjust density as needed
@@ -115,22 +109,6 @@ class GameScene extends Phaser.Scene {
         // this.scene.resume();
         console.log('Game resumed on focus');
     }
-
-    createChatBox() {
-        // // Create a graphics object for the chat box background
-        // let chatBox = this.add.graphics();
-        // chatBox.fillStyle(0x000000, 0.5); // Set the color and transparency
-        // chatBox.fillRect(10, this.cameras.main.height - 110, 300, 100); // Position and size
-
-        // // Add static text as a placeholder
-        // this.chatText = this.add.text(15, this.cameras.main.height - 105, '', { font: '16px Arial', color: '#FFFFFF' });
-        // this.input.keyboard.on('keydown', event => {
-        //     this.handleChatInput(event);
-        // });
-        
-        // this.cameras.main.ignore(chatBox);
-        // this.cameras.main.ignore(this.chatText);
-    }
     
     resize(gameSize, baseSize, displaySize, resolution) {
         const width = gameSize.width;
@@ -152,7 +130,7 @@ class GameScene extends Phaser.Scene {
         Object.keys(this.players).forEach(id => {
                 this.players[id].update();
             }
-        );
+        ); 
         // this.graphics.clear();
         // Object.keys(this.players).forEach(id => {
         //     const player = this.players[id];
@@ -161,34 +139,6 @@ class GameScene extends Phaser.Scene {
         //     const tagBox = player.nameTag.getBounds();
         //     this.graphics.strokeRectShape(tagBox);
         // });
-
-        // Draw player direction indicator
-        // Assuming 'player' is your player sprite
-        const player = this.player;
-        const angle = player.rotation; // Player's current rotation in radians
-
-        // Clear previous graphics
-        this.arrowGraphics.clear();
-
-        // Draw arc around the player
-        this.arrowGraphics.strokeCircle(player.x, player.y, 50); // Draw a circle with radius 50 pixels
-
-        // Calculate arrow points based on player's angle
-        const endX = player.x + 100 * Math.cos(angle); // Extend the arrow out 60 pixels from player
-        const endY = player.y + 100 * Math.sin(angle);
-        const startX = player.x + 100 * Math.cos(angle); // Start the arrow a bit away from player center
-        const startY = player.y + 100 * Math.sin(angle);
-
-        // Draw the line for the arrow
-        this.arrowGraphics.lineBetween(startX, startY, endX, endY);
-
-        // Draw arrow head
-        const arrowAngle = 0.5; // Angle of the arrow head in radians
-        const arrowLength = 10; // Length of the sides of the arrow head
-        this.arrowGraphics.lineBetween(endX, endY,
-            endX - arrowLength * Math.cos(angle - arrowAngle), endY - arrowLength * Math.sin(angle - arrowAngle));
-        this.arrowGraphics.lineBetween(endX, endY,
-            endX - arrowLength * Math.cos(angle + arrowAngle), endY - arrowLength * Math.sin(angle + arrowAngle));
     }
 
     calculatePlayerVelocity() {
@@ -237,7 +187,6 @@ class GameScene extends Phaser.Scene {
             if (currentTime - lastSentTime > throttleInterval && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: 'player_move',
-                    id: myPlayerId,
                     x: player.sprite.x,
                     y: player.sprite.y,
                     velocity_x: player.sprite.body.velocity.x,
@@ -339,10 +288,6 @@ class GameScene extends Phaser.Scene {
         // Append the message item to the list
         messagesList.appendChild(messageItem);
         messageItem.className = "chatMessage";
-        messagesList.addEventListener('wheel', function(event) {
-            event.preventDefault();
-            document.getElementById('messagesList').scrollTop += event.deltaY;
-        });
     
         // Call to remove the message item after a delay (10 seconds)
         // removeElementAfterDelay(messageItem, 10000);
@@ -425,8 +370,13 @@ class GameScene extends Phaser.Scene {
         }
     }
 }
+document.getElementById('messageInput').addEventListener('click', function(event) {
+    event.stopPropagation();
+});
 
 document.getElementById('chatBox').addEventListener('wheel', function(event) {
+    event.stopPropagation();
+    event.preventDefault();
     document.getElementById('messagesList').scrollTop += event.deltaY;
 });
 
@@ -445,7 +395,7 @@ export const phaserConfig = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false,
+            debug: true,
             gravity: { y: 0 }
         }
     },

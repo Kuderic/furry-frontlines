@@ -86,7 +86,7 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             data = await websocket.receive_text()
             message  = json.loads(data)
-            # print(f"Received message. JSON: {message}")
+            print(f"Received message. JSON: {message}")
 
             if message["type"] == "player_move":
                 player_list[client_id].x = message["x"]

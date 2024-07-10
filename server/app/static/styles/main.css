@@ -19,6 +19,7 @@ body {
 }
 
 #gameContainer {
+    z-index: 1;
     width: 100%;
     height: 100%;
     display: flex;
@@ -27,6 +28,7 @@ body {
     position: relative;
 }
 #chatBox {
+    z-index: 100; /* Ensure it is above the Phaser canvas */
     top: auto;
     right: auto;
     left: 0;
