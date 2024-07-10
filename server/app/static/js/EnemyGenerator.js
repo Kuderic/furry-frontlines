@@ -14,7 +14,7 @@ export class EnemyGenerator {
     update() {
         // Update all the enemies
         for (let i = 0; i < this.enemyList.length; i++) {
-            enemyList[i].update();
+            this.enemyList[i].update();
         }
     }
 }

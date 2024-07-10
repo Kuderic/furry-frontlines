@@ -2,11 +2,13 @@ import { Projectile } from './Projectile.js';
 
 export class Character {
     constructor(scene, x, y, speed, name, texture, maxHealth=10) {
+        this.scene = scene;
         // Create sprite
         const sprite = scene.physics.add.sprite(x, y, texture).setOrigin(0.5, 0.5).setDisplaySize(125, 125);
-        sprite.setCollideWorldBounds(true);
         this.sprite = sprite;
         this.sprite.setDepth(1);
+        this.scene.characters.add(this.sprite);
+        sprite.body.setCollideWorldBounds(true);
 
         // Create name tag
         const nameTag = scene.add.bitmapText(x, y - 200, 'rainyhearts', name, 40).setOrigin(0.5);
@@ -96,7 +98,8 @@ export class Character {
     
     shootProjectile(targetX, targetY) {
         const direction = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, targetX, targetY);
-        new Projectile(this.scene, this.sprite.x, this.sprite.y, direction);
+        const p = new Projectile(this.scene, this.sprite.x, this.sprite.y, direction);
+        console.log(p.sprite.body.velocity);
     }
 
     takeDamage(amount) {
@@ -105,7 +108,7 @@ export class Character {
         this.drawHealthBar();
 
         if (this.currentHealth <= 0) {
-            this.die();
+            this.destroy();
         }
     }
 
@@ -115,5 +118,7 @@ export class Character {
         this.healthBar.destroy();
         this.bubble.destroy();
         this.bubbleText.destroy();
+
+        this.scene.characters.remove(this.sprite);
     }
 }

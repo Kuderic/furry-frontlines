@@ -1,16 +1,29 @@
 export class Projectile {
     constructor(scene, x, y, direction) {
         this.scene = scene;
-        this.sprite = scene.physics.add.sprite(x, y, 'projectile').setOrigin(0.5, 0.5);
         this.speed = 800;
         this.direction = direction;
 
+        this.sprite = scene.physics.add.sprite(x, y, 'projectile').setOrigin(0.5, 0.5);
+        // Add to characters physics group 
+        this.scene.projectiles.add(this.sprite);
+        this.sprite.body.setCollideWorldBounds(true);
+        
+
         // Set the velocity based on direction
-        scene.physics.velocityFromRotation(direction, this.speed, this.sprite.body.velocity);
+        const velocity = scene.physics.velocityFromRotation(direction, this.speed);
+
+        // Set the velocity
+        this.sprite.setVelocity(velocity.x, velocity.y);
 
         // Destroy the projectile after it travels a certain distance or time
         scene.time.delayedCall(1000, () => {
             this.sprite.destroy();
+            this.scene.projectiles.remove(this.sprite);
         });
+        
+
+        // Log the group contents after adding the projectile
+        // console.log(this.scene.projectiles.getChildren());
     }
 }

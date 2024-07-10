@@ -18,17 +18,22 @@ class GameScene extends Phaser.Scene {
         this.players = {};
         this.myPlayerId = "";
         this.lastSentTime = 0;
+        this.lastShotTime = 0;
         this.throttleInterval = 200; // 5 updates per second
         this.musicStarted = false; // Flag to check if music has started
         this.lastSentPlayerInfo = {}; // keep track of player state on server. if doesnt match, then send 
+        this.shootDelay = 250; // Delay in milliseconds between shots
     }
     preload() {
         // Done in LoadingScene
     }
     
     create() {
-        // Disable context menu on right-click
+        // Disable context menu
         this.input.mouse.disableContextMenu();
+        // Attach sendMessage to the window object
+        window.sendMessage = this.sendMessage.bind(this);
+        window.stopPropagation = this.stopPropagation;
         // Launch the UI Scene alongside the Main Scene
         this.scene.launch('UIScene');
         // Access the UI scene
@@ -40,30 +45,38 @@ class GameScene extends Phaser.Scene {
         this.scale.on('resize', this.resize, this);
 
         // Generate grass under the bunny layer
-        const gg = new GrassGenerator(this); // Adjust density as needed
-        gg.generateGrass();
+        this.gg = new GrassGenerator(this); // Adjust density as needed
+        this.gg.generateGrass();
 
-        const enemyGenerator = new EnemyGenerator(this);
-        enemyGenerator.createEnemy(1000, 1000);
+        // Create physics groups
+        this.projectiles = this.physics.add.group();
+        this.characters = this.physics.add.group();
 
-        // Attach sendMessage to the window object
-        window.sendMessage = this.sendMessage.bind(this);
-        window.stopPropagation = this.stopPropagation;
+        // Add collision detection between projectiles and enemies
+        this.physics.add.collider(this.projectiles, this.characters, this.hitCharacter, null, this);
+
+        // Create enemies
+        this.enemyGenerator = new EnemyGenerator(this);
+        this.enemyGenerator.createEnemy(1000, 1000);
         
         // Create websocket
         this.ws = this.createWebsocket();
 
         // Handlers
-        this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-        this.keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
-        this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-        this.keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+        this.keyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
+        this.keyRight = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+        this.keyUp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+        this.keyDown = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
 
         // Add right-click handling
         this.input.on('pointerdown', (pointer) => {
             if (pointer.rightButtonDown()) {
-                this.player.shootProjectile(pointer.worldX, pointer.worldY);
+                this.pointer = pointer;
+                this.shouldShoot = true;
             }
+        });
+        this.input.on('pointerup', () => {
+            this.shouldShoot = false;
         });
 
         // Add music
@@ -100,6 +113,24 @@ class GameScene extends Phaser.Scene {
         window.addEventListener('blur', this.onBlur.bind(this));
         window.addEventListener('focus', this.onFocus.bind(this));
     }
+    
+    hitCharacter(projectile, character) {
+        console.log(projectile, character);
+        if (character === this.player.sprite) {
+            // ignore
+            console.log("ignored")
+            return;
+        }
+
+        // Trigger effect, e.g., reduce HP
+        // character.takeDamage(1);
+
+        // Destroy the projectile
+        projectile.destroy();
+
+        // Optionally, add other effects like playing a sound or animation
+        console.log(`${character.name} hit! HP: ${character.currentHp}`);
+    }
 
     onBlur() {
         // Method to handle when the game window loses focus
@@ -127,37 +158,49 @@ class GameScene extends Phaser.Scene {
         // this.yourUIElement.setPosition(width / 2, height - 50); // Example: reposition an element
     }
     
-    update() {
+    update(time) {
 
         if (!this.player) return;
 
         this.calculatePlayerVelocity();
+        this.enemyGenerator.update();
         
         // Update all the players
         Object.keys(this.players).forEach(id => {
                 this.players[id].update();
             }
         );
+
+        // Shooting logic
+        if (this.shouldShoot && time > this.lastShotTime + this.shootDelay) {
+            console.log("shooting");
+            this.player.shootProjectile(this.pointer.worldX, this.pointer.worldY);
+            console.log(this.projectiles.getChildren());
+            this.lastShotTime = time;
+        }
     }
 
     calculatePlayerVelocity() {
         const { cursors, player, ws, myPlayerId: myPlayerId, lastSentTime, throttleInterval } = this;
 
-        if (this.keyA.isDown || this.moveLeft) {
-            player.sprite.setVelocityX(-1 * player.speed);
-        } else if (this.keyD.isDown || this.moveRight) {
-            player.sprite.setVelocityX(1 * player.speed);
+
+        // Handle player movement with arrow keys
+        if (this.keyLeft.isDown) {
+            this.player.sprite.setVelocityX(-this.player.speed);
+        } else if (this.keyRight.isDown) {
+            this.player.sprite.setVelocityX(this.player.speed);
         } else {
-            player.sprite.setVelocityX(0);
+            this.player.sprite.setVelocityX(0);
         }
 
-        if (this.keyW.isDown || this.moveUp) {
-            player.sprite.setVelocityY(-1 * player.speed);
-        } else if (this.keyS.isDown || this.moveDown) {
-            player.sprite.setVelocityY(1 * player.speed);
+        if (this.keyUp.isDown) {
+            this.player.sprite.setVelocityY(-this.player.speed);
+        } else if (this.keyDown.isDown) {
+            this.player.sprite.setVelocityY(this.player.speed);
         } else {
-            player.sprite.setVelocityY(0);
+            this.player.sprite.setVelocityY(0);
         }
+
 
         // Joystick movement
         let forceX = 0
@@ -257,7 +300,6 @@ class GameScene extends Phaser.Scene {
     }
 
     sendMessage(event) {
-        console.log("SEND BUTTON CLICKED");
         event.preventDefault(); // Used to stop form reloading page
         const message = document.getElementById("messageInput").value;
         if (message) {
@@ -316,6 +358,7 @@ class GameScene extends Phaser.Scene {
 
                 // Create new Player object
                 const newPlayer = new Player(this, newPlayerData.x, newPlayerData.y, NEW_PLAYER_SPEED, newPlayerData.name, newPlayerData.color);
+                this.characters.remove(newPlayer.sprite);
                 
                 // Store new player
                 const newPlayerId = message.client_id;
@@ -325,7 +368,7 @@ class GameScene extends Phaser.Scene {
                 this.displayServerMessage(`${newPlayerData.name} has connected.`)
                 
                 // // Set up the camera
-                // this.cameras.main.setBounds(0, 0, WORLD_HEIGHT, WORLD_WIDTH); // Set the boundaries of the camera
+                this.cameras.main.setBounds(0, 0, WORLD_HEIGHT, WORLD_WIDTH); // Set the boundaries of the camera
                 this.cameras.main.startFollow(this.player.sprite, true, 0.1, .1); // Make the camera follow the player
                 // Make fpsText ignore camera movements
                 break;
