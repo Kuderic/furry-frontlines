@@ -15,12 +15,11 @@
     <body>
         <div id="gameContainer" tabindex="-1">
             <div id="chatBox">
+                <ul id="messagesList" tabindex="-1"></ul>
+                <hr>
                 <form onsubmit="return sendMessage(event)" autocomplete="off">
                     <input type="text" id="messageInput" placeholder="Type your message here">
-                    <input type="submit" value="Send">
                 </form>
-                <hr>
-                <ul id="messagesList"></ul>
             </div>
         </div>
     </body>

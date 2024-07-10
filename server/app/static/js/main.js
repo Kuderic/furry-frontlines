@@ -338,7 +338,8 @@ class GameScene extends Phaser.Scene {
         messagesList.appendChild(messageItem);
     
         // Call to remove the message item after a delay (10 seconds)
-        removeElementAfterDelay(messageItem, 10000);
+        // removeElementAfterDelay(messageItem, 10000);
+        scrollToBottom();
     }
 
     handleMessage(data) {
@@ -437,6 +438,11 @@ function removeElementAfterDelay(element, delay) {
             element.parentNode.removeChild(element);
         }
     }, delay);
+}
+
+function scrollToBottom() {
+    const messagesList = document.getElementById('messagesList');
+    messagesList.scrollTop = messagesList.scrollHeight;
 }
 
 const game = new Phaser.Game(phaserConfig);

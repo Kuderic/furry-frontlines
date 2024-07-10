@@ -27,24 +27,37 @@ body {
     position: relative;
 }
 
+
 #chatBox {
-    position: absolute;
-    top: 200px; /* Position from the top of the container */
-    right: 200px;
+    top: auto;
+    right: auto;
+    left: 0;
+    bottom: 0;
+    min-width: 300px;
+    max-width: 70%;
+    margin: 15px;
     /* transform: translateX(-100%); */
     color: darkblue; /* Customize text color */
     background: rgba(255, 255, 255, 0.7); /* Optional: background to make text readable */
-    padding: 10px;
+    padding: 15px;
     border-radius: 5px;
-    max-height: 200px;
-    overflow-y: auto;
+    pointer-events: none;
+
+    #messageInput {
+        pointer-events: all;
+        width: 95%;
+    }
     
     ul {
         /* border: 3px solid darkblue; */
+        pointer-events: none;
         margin: 5px;
         padding: 3px;
+        max-height: 150px;
+        overflow-y: auto;
     }
     li {
+        pointer-events: none;
         list-style-type: none;
         font-size: 1.5em;
     }
@@ -55,11 +68,9 @@ body {
     }
 }
 
-@media (max-width: 768px) {
+@media (min-width: 1px) {
     #chatBox {
-        position: fixed;
-        bottom: 0;
-        width: 100%;
+        position: absolute;
     }
 }
 
