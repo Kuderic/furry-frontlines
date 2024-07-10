@@ -1,7 +1,9 @@
-import { Player } from './player.js';
+import { Player } from './Player.js';
 import { GrassGenerator } from './grassGenerator.js';
 import { UIScene } from './UIScene.js';
 import { LoadingScene } from './LoadingScene.js';
+import {EnemyGenerator} from './EnemyGenerator.js';
+
 // import './plugins/phaser.js';
 // import rexvirtualjoystickplugin from './plugins/rexvirtualjoystickplugin.min.js';
 
@@ -25,6 +27,8 @@ class GameScene extends Phaser.Scene {
     }
     
     create() {
+        // Disable context menu on right-click
+        this.input.mouse.disableContextMenu();
         // Launch the UI Scene alongside the Main Scene
         this.scene.launch('UIScene');
         // Access the UI scene
@@ -46,12 +50,20 @@ class GameScene extends Phaser.Scene {
         // Create websocket
         this.ws = this.createWebsocket();
 
-        this.cursors = this.input.keyboard.createCursorKeys();
-        if (this.cursors.space) {
-            console.log("removing listeners");
-            this.input.keyboard.clearCaptures();
-        }
+        // Handlers
+        this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+        this.keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+        this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+        this.keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
 
+        // Add right-click handling
+        this.input.on('pointerdown', (pointer) => {
+            if (pointer.rightButtonDown()) {
+                this.player.shootProjectile(pointer.worldX, pointer.worldY);
+            }
+        });
+
+        // Add music
         this.addBackgroundMusic();
 
         // Create movement joystick
@@ -67,7 +79,8 @@ class GameScene extends Phaser.Scene {
 
         // Move joysticks dynamically based on pointer-down
         this.input.on('pointerdown', (pointer) => {
-            if (pointer.x <= this.cameras.main.width * 0.7) {
+            if (pointer.leftButtonDown() &&
+                pointer.x <= this.cameras.main.width * 0.7) {
                 this.movementJoyStick.base.setPosition(pointer.x, pointer.y).setAlpha(0.5)
                 this.movementJoyStick.thumb.setPosition(pointer.x, pointer.y).setAlpha(1)
             }
@@ -121,31 +134,23 @@ class GameScene extends Phaser.Scene {
         Object.keys(this.players).forEach(id => {
                 this.players[id].update();
             }
-        ); 
-        // this.graphics.clear();
-        // Object.keys(this.players).forEach(id => {
-        //     const player = this.players[id];
-        //     const bbox = player.sprite.getBounds();
-        //     this.graphics.strokeRectShape(bbox);
-        //     const tagBox = player.nameTag.getBounds();
-        //     this.graphics.strokeRectShape(tagBox);
-        // });
+        );
     }
 
     calculatePlayerVelocity() {
         const { cursors, player, ws, myPlayerId: myPlayerId, lastSentTime, throttleInterval } = this;
 
-        if (cursors.left.isDown || this.moveLeft) {
+        if (this.keyA.isDown || this.moveLeft) {
             player.sprite.setVelocityX(-1 * player.speed);
-        } else if (cursors.right.isDown || this.moveRight) {
+        } else if (this.keyD.isDown || this.moveRight) {
             player.sprite.setVelocityX(1 * player.speed);
         } else {
             player.sprite.setVelocityX(0);
         }
 
-        if (cursors.up.isDown || this.moveUp) {
+        if (this.keyW.isDown || this.moveUp) {
             player.sprite.setVelocityY(-1 * player.speed);
-        } else if (cursors.down.isDown || this.moveDown) {
+        } else if (this.keyS.isDown || this.moveDown) {
             player.sprite.setVelocityY(1 * player.speed);
         } else {
             player.sprite.setVelocityY(0);
@@ -351,8 +356,7 @@ class GameScene extends Phaser.Scene {
                 console.log("disconnect_player_message received");
                 const disconnectId = message.client_id;
                 this.displayServerMessage(`${this.players[disconnectId].name} has disconnected.`)
-                this.players[disconnectId].sprite.destroy(); // Destroy the sprite
-                this.players[disconnectId].nameTag.destroy(); // Destroy the sprite
+                this.players[disconnectId].destroy();
                 delete this.players[disconnectId]; // Remove from dictionary
                 break;
 
@@ -399,7 +403,7 @@ export const phaserConfig = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true,
+            debug: false,
             gravity: { y: 0 }
         }
     },

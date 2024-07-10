@@ -21,7 +21,9 @@ export class LoadingScene extends Phaser.Scene {
         });
 
         // Load assets
+        this.load.image('projectile', 'static/images/projectile.png');
         this.load.image('grass1', 'static/images/margarass.png');
+        this.load.image('wolf', 'static/images/wolf.png');
         this.load.image('player0', 'static/images/bunny1.png'); // Replace with your player image path
         this.load.image('player1', 'static/images/bunny2.png'); // Replace with your player image path
         this.load.image('player2', 'static/images/bunny3.png'); // Replace with your player image path
