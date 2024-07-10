@@ -441,8 +441,4 @@ function removeElementAfterDelay(element, delay) {
 
 const game = new Phaser.Game(phaserConfig);
 
-window.addEventListener('resize', () => {
-    game.scale.resize(window.innerWidth, window.innerHeight);
-});
-
 export default GameScene;
