@@ -62,10 +62,11 @@ class GameScene extends Phaser.Scene {
         this.ws = this.createWebsocket();
 
         this.cursors = this.input.keyboard.createCursorKeys();
-        // Check if the spacebar is part of cursors, and disable it
         if (this.cursors.space) {
-            this.cursors.space.enabled = false;
+            console.log("removing listeners");
+            this.input.keyboard.clearCaptures();
         }
+
         this.addBackgroundMusic();
 
         // Create movement joystick
@@ -94,6 +95,25 @@ class GameScene extends Phaser.Scene {
                 this.movementJoyStick.thumb.setAlpha(0.35)
             }
         })
+        
+        window.addEventListener('blur', this.onBlur.bind(this));
+        window.addEventListener('focus', this.onFocus.bind(this));
+    }
+
+    onBlur() {
+        // Method to handle when the game window loses focus
+        this.input.keyboard.enabled = false;  // Disable keyboard input
+        // Optionally, you might want to pause the game
+        // this.scene.pause();
+        console.log('Game paused because it lost focus');
+    }
+
+    onFocus() {
+        // Method to handle when the game window gains focus
+        this.input.keyboard.enabled = true;  // Re-enable keyboard input
+        // Optionally, you might want to resume the game
+        // this.scene.resume();
+        console.log('Game resumed on focus');
     }
 
     createChatBox() {
@@ -299,8 +319,6 @@ class GameScene extends Phaser.Scene {
             });
             this.ws.send(data);
             document.getElementById("messageInput").value = ''; // Clear the input field after sending the message
-        } else {
-            alert("Please enter a message to send");
         }
         return false;
     }
@@ -309,8 +327,18 @@ class GameScene extends Phaser.Scene {
         let messagesList = document.getElementById("messagesList");
         let messageItem = document.createElement("li");
         let name = this.players[playerId].name;
-        messageItem.textContent = name + ': ' + message;
+    
+        // Create a timestamp
+        let timestamp = new Date().toLocaleTimeString(); // This gives you a human-readable time format
+    
+        // Include the timestamp in the message text
+        messageItem.textContent = `[${timestamp}] ${name}: ${message}`;
+    
+        // Append the message item to the list
         messagesList.appendChild(messageItem);
+    
+        // Call to remove the message item after a delay (10 seconds)
+        this.removeElementAfterDelay(messageItem, 10000);
     }
 
     handleMessage(data) {
@@ -402,6 +430,14 @@ export const phaserConfig = {
     transparent: true,
     scene: [GameScene, UIScene]
 };
+
+function removeElementAfterDelay(element, delay) {
+    setTimeout(() => {
+        if (element) {
+            element.parentNode.removeChild(element);
+        }
+    }, delay);
+}
 
 const game = new Phaser.Game(phaserConfig);
 
