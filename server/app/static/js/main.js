@@ -43,6 +43,9 @@ class GameScene extends Phaser.Scene {
         const gg = new GrassGenerator(this); // Adjust density as needed
         gg.generateGrass();
 
+        const enemyGenerator = new EnemyGenerator(this);
+        enemyGenerator.createEnemy(1000, 1000);
+
         // Attach sendMessage to the window object
         window.sendMessage = this.sendMessage.bind(this);
         window.stopPropagation = this.stopPropagation;
