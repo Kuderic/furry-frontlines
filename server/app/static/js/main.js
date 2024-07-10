@@ -148,9 +148,9 @@ class GameScene extends Phaser.Scene {
 
         this.calculatePlayerVelocity();
         
-        // Update the position of all players name tags
+        // Update all the players
         Object.keys(this.players).forEach(id => {
-                this.players[id].nameTag.setPosition(this.players[id].sprite.x, this.players[id].sprite.y - 20);
+                this.players[id].update();
             }
         );
         // this.graphics.clear();
@@ -324,6 +324,8 @@ class GameScene extends Phaser.Scene {
     }
 
     displayMessage(playerId, message) {
+        this.players[playerId].say(message);
+
         let messagesList = document.getElementById("messagesList");
         let messageItem = document.createElement("li");
         let name = this.players[playerId].name;
@@ -336,9 +338,27 @@ class GameScene extends Phaser.Scene {
     
         // Append the message item to the list
         messagesList.appendChild(messageItem);
+        messageItem.className = "chatMessage";
+        messagesList.addEventListener('wheel', function(event) {
+            event.preventDefault();
+            document.getElementById('messagesList').scrollTop += event.deltaY;
+        });
     
         // Call to remove the message item after a delay (10 seconds)
         // removeElementAfterDelay(messageItem, 10000);
+        scrollToBottom();
+    }
+
+    displayServerMessage(message) {
+        let messagesList = document.getElementById("messagesList");
+        let messageItem = document.createElement("li");
+        messageItem.className = "serverMessage";
+        // Create a timestamp
+        let timestamp = new Date().toLocaleTimeString(); // This gives you a human-readable time format
+        // Include the timestamp in the message text
+        messageItem.textContent = `[${timestamp}]: ${message}`;
+        // Append the message item to the list
+        messagesList.appendChild(messageItem);
         scrollToBottom();
     }
 
@@ -358,6 +378,7 @@ class GameScene extends Phaser.Scene {
                 this.myPlayerId = newPlayerId;
                 this.player = newPlayer;
                 this.players[this.myPlayerId] = newPlayer;
+                this.displayServerMessage(`${newPlayerData.name} has connected.`)
                 
                 // // Set up the camera
                 // this.cameras.main.setBounds(0, 0, WORLD_HEIGHT, WORLD_WIDTH); // Set the boundaries of the camera
@@ -384,6 +405,7 @@ class GameScene extends Phaser.Scene {
                         // Create new player
                         const newPlayer = new Player(this, playerData.x, playerData.y, NEW_PLAYER_SPEED, playerData.name, playerData.color);
                         this.players[id] = newPlayer;
+                        this.displayServerMessage(`${playerData.name} has connected.`)
                     }
                 }
                 break;
@@ -391,6 +413,7 @@ class GameScene extends Phaser.Scene {
             case "disconnect_player":
                 console.log("disconnect_player_message received");
                 const disconnectId = message.client_id;
+                this.displayServerMessage(`${this.players[disconnectId].name} has disconnected.`)
                 this.players[disconnectId].sprite.destroy(); // Destroy the sprite
                 this.players[disconnectId].nameTag.destroy(); // Destroy the sprite
                 delete this.players[disconnectId]; // Remove from dictionary
@@ -401,6 +424,10 @@ class GameScene extends Phaser.Scene {
         }
     }
 }
+
+document.getElementById('chatBox').addEventListener('wheel', function(event) {
+    document.getElementById('messagesList').scrollTop += event.deltaY;
+});
 
 export const phaserConfig = {
     type: Phaser.AUTO,
@@ -423,7 +450,7 @@ export const phaserConfig = {
     },
     fps: {
         min: 10,
-        target: 60,
+        target: 165,
         forceSetTimeOut: false,
         deltaHistory: 10,
         panicMax: 120

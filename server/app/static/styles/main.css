@@ -12,7 +12,7 @@ html, body {
     height: 100%;
 }
 body {
-    color: darkblue;
+    color: black;
     background-color: #457237;
     justify-content: center;
     align-items: center;
@@ -26,8 +26,6 @@ body {
     align-items: center;
     position: relative;
 }
-
-
 #chatBox {
     top: auto;
     right: auto;
@@ -44,26 +42,27 @@ body {
     pointer-events: none;
 
     #messageInput {
-        pointer-events: all;
-        width: 95%;
+        pointer-events: auto;
+        font-family: 'Rainy Hearts', sans-serif;
+        font-size: 1.5em;
+        width: max(95%, 200px);
     }
+
+    .serverMessage {
+        color: darkgoldenrod;
+    }    
     
     ul {
         /* border: 3px solid darkblue; */
-        pointer-events: none;
         margin: 5px;
         padding: 3px;
         max-height: 150px;
         overflow-y: auto;
+        scroll-behavior: smooth; /* Enables smooth scrolling */
     }
     li {
         pointer-events: none;
         list-style-type: none;
-        font-size: 1.5em;
-    }
-    
-    input {
-        font-family: 'Rainy Hearts', sans-serif;
         font-size: 1.5em;
     }
 }
