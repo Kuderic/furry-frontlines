@@ -44,6 +44,7 @@ body {
     pointer-events: none;
 
     #messageInput {
+        z-index: 101;
         pointer-events: auto;
         font-family: 'Rainy Hearts', sans-serif;
         font-size: 1.5em;
@@ -55,6 +56,7 @@ body {
     }    
     
     ul {
+        z-index: 101;
         /* border: 3px solid darkblue; */
         margin: 5px;
         padding: 3px;
