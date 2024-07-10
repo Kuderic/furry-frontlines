@@ -1,5 +1,6 @@
 import { Player } from './player.js';
 import { GrassGenerator } from './grassGenerator.js';
+import { UIScene } from './UIScene.js';
 // import './plugins/phaser.js';
 // import rexvirtualjoystickplugin from './plugins/rexvirtualjoystickplugin.min.js';
 
@@ -14,12 +15,11 @@ class GameScene extends Phaser.Scene {
         this.players = {};
         this.myPlayerId = "";
         this.lastSentTime = 0;
-        this.throttleInterval = 100; // 10 updates per second
+        this.throttleInterval = 50; // 10 updates per second
         this.musicStarted = false; // Flag to check if music has started
         this.lastSentPlayerInfo = {}; // keep track of player state on server. if doesnt match, then send 
     }
     preload() {
-        this.load.bitmapFont('rainyhearts', 'static/fonts/rainyhearts_0.png', 'static/fonts/rainyhearts.fnt');
         this.load.image('grass1', 'static/images/margarass.png');
         this.load.image('player0', 'static/images/bunny1.png'); // Replace with your player image path
         this.load.image('player1', 'static/images/bunny2.png'); // Replace with your player image path
@@ -36,9 +36,10 @@ class GameScene extends Phaser.Scene {
     }
     
     create() {
-        // Debug tools
-        this.fpsText = this.add.bitmapText(100, 50, 'rainyhearts', '', 40).setOrigin(0.5);
-        this.fpsText.tint = 0xff0000;
+        // Access the UI scene
+        this.uiScene = this.scene.get('UIScene');
+
+        this.createChatBox();
 
         // Set world and camera bounds
         this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
@@ -61,6 +62,10 @@ class GameScene extends Phaser.Scene {
         this.ws = this.createWebsocket();
 
         this.cursors = this.input.keyboard.createCursorKeys();
+        // Check if the spacebar is part of cursors, and disable it
+        if (this.cursors.space) {
+            this.cursors.space.enabled = false;
+        }
         this.addBackgroundMusic();
 
         // Create movement joystick
@@ -90,6 +95,22 @@ class GameScene extends Phaser.Scene {
             }
         })
     }
+
+    createChatBox() {
+        // // Create a graphics object for the chat box background
+        // let chatBox = this.add.graphics();
+        // chatBox.fillStyle(0x000000, 0.5); // Set the color and transparency
+        // chatBox.fillRect(10, this.cameras.main.height - 110, 300, 100); // Position and size
+
+        // // Add static text as a placeholder
+        // this.chatText = this.add.text(15, this.cameras.main.height - 105, '', { font: '16px Arial', color: '#FFFFFF' });
+        // this.input.keyboard.on('keydown', event => {
+        //     this.handleChatInput(event);
+        // });
+        
+        // this.cameras.main.ignore(chatBox);
+        // this.cameras.main.ignore(this.chatText);
+    }
     
     resize(gameSize, baseSize, displaySize, resolution) {
         const width = gameSize.width;
@@ -102,8 +123,6 @@ class GameScene extends Phaser.Scene {
     }
     
     update() {
-        // Debug
-        this.fpsText.setText('FPS: ' + this.game.loop.actualFps.toFixed(2));
 
         if (!this.player) return;
 
@@ -314,6 +333,7 @@ class GameScene extends Phaser.Scene {
                 // // Set up the camera
                 // this.cameras.main.setBounds(0, 0, WORLD_HEIGHT, WORLD_WIDTH); // Set the boundaries of the camera
                 this.cameras.main.startFollow(this.player.sprite, true, 0.1, .1); // Make the camera follow the player
+                // Make fpsText ignore camera movements
                 break;
 
             case "chat_message":
@@ -380,7 +400,7 @@ export const phaserConfig = {
         panicMax: 120
     },
     transparent: true,
-    scene: [GameScene]
+    scene: [GameScene, UIScene]
 };
 
 const game = new Phaser.Game(phaserConfig);
