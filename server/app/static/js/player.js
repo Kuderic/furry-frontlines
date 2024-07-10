@@ -12,12 +12,13 @@ export class Player {
         const nameTag = scene.add.bitmapText(x, y - 200, 'rainyhearts', name, 40).setOrigin(0.5);
 
         // Create a graphics object for the bubble
-        this.bubble = scene.add.graphics({ fillStyle: { color: 0xffffff } });
+        this.bubble = scene.add.graphics();
+        this.bubble.fillStyle(0xffffff, 0.8);
         // Draw the bubble (e.g., a simple rectangle or rounded rectangle)
         this.bubble.fillRoundedRect(0, 0, 150, 50, 12);
         this.bubble.setVisible(false);  // Initially hidden
         // Create a text object for the message
-        this.bubbleText = scene.add.bitmapText(0, 0, 'rainyhearts', '', 16);
+        this.bubbleText = scene.add.bitmapText(0, 0, 'rainyhearts', '', 24);
         this.bubbleText.setVisible(false);
         this.bubble.setDepth(1);
         this.bubbleText.setDepth(1);

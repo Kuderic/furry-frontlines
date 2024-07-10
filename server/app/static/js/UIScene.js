@@ -1,12 +1,9 @@
 export class UIScene extends Phaser.Scene {
     constructor() {
-        super({ key: 'UIScene', active: true });
+        super({ key: 'UIScene'});
     }
 
     preload() {
-        this.load.bitmapFont('rainyhearts', 'static/fonts/rainyhearts_0.png', 'static/fonts/rainyhearts.fnt');
-        this.load.image('mute', 'static/images/mute.png');
-        this.load.image('unmute', 'static/images/unmute.png');
     }
 
     create() {

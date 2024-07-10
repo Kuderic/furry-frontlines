@@ -1,6 +1,7 @@
 import { Player } from './player.js';
 import { GrassGenerator } from './grassGenerator.js';
 import { UIScene } from './UIScene.js';
+import { LoadingScene } from './LoadingScene.js';
 // import './plugins/phaser.js';
 // import rexvirtualjoystickplugin from './plugins/rexvirtualjoystickplugin.min.js';
 
@@ -20,22 +21,12 @@ class GameScene extends Phaser.Scene {
         this.lastSentPlayerInfo = {}; // keep track of player state on server. if doesnt match, then send 
     }
     preload() {
-        this.load.image('grass1', 'static/images/margarass.png');
-        this.load.image('player0', 'static/images/bunny1.png'); // Replace with your player image path
-        this.load.image('player1', 'static/images/bunny2.png'); // Replace with your player image path
-        this.load.image('player2', 'static/images/bunny3.png'); // Replace with your player image path
-        this.load.audio('bgMusic', 'static/sounds/billie-eilish-meow.mp3'); // Load the background music
-        this.load.image('leftButton', 'static/images/leftButton.png'); // Load left button image
-        this.load.image('rightButton', 'static/images/rightButton.png'); // Load right button image
-        this.load.image('upButton', 'static/images/upButton.png'); // Load up button image
-        this.load.image('downButton', 'static/images/downButton.png'); // Load down button image
-        this.load.image('joystick', 'static/images/joystick.png');
-        this.load.plugin('rexvirtualjoystickplugin',
-            'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
-
+        // Done in LoadingScene
     }
     
     create() {
+        // Launch the UI Scene alongside the Main Scene
+        this.scene.launch('UIScene');
         // Access the UI scene
         this.uiScene = this.scene.get('UIScene');
 
@@ -380,6 +371,19 @@ document.getElementById('chatBox').addEventListener('wheel', function(event) {
     document.getElementById('messagesList').scrollTop += event.deltaY;
 });
 
+function removeElementAfterDelay(element, delay) {
+    setTimeout(() => {
+        if (element) {
+            element.parentNode.removeChild(element);
+        }
+    }, delay);
+}
+
+function scrollToBottom() {
+    const messagesList = document.getElementById('messagesList');
+    messagesList.scrollTop = messagesList.scrollHeight;
+}
+
 export const phaserConfig = {
     type: Phaser.AUTO,
     parent: 'gameContainer',
@@ -407,21 +411,8 @@ export const phaserConfig = {
         panicMax: 120
     },
     transparent: true,
-    scene: [GameScene, UIScene]
+    scene: [LoadingScene, GameScene, UIScene]
 };
-
-function removeElementAfterDelay(element, delay) {
-    setTimeout(() => {
-        if (element) {
-            element.parentNode.removeChild(element);
-        }
-    }, delay);
-}
-
-function scrollToBottom() {
-    const messagesList = document.getElementById('messagesList');
-    messagesList.scrollTop = messagesList.scrollHeight;
-}
 
 const game = new Phaser.Game(phaserConfig);
 
