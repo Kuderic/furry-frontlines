@@ -1,4 +1,4 @@
-import { Player } from './Player.js';
+import { Player } from './player.js';
 import { GrassGenerator } from './grassGenerator.js';
 import { UIScene } from './UIScene.js';
 import { LoadingScene } from './LoadingScene.js';
