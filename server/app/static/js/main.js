@@ -338,7 +338,7 @@ class GameScene extends Phaser.Scene {
         messagesList.appendChild(messageItem);
     
         // Call to remove the message item after a delay (10 seconds)
-        this.removeElementAfterDelay(messageItem, 10000);
+        removeElementAfterDelay(messageItem, 10000);
     }
 
     handleMessage(data) {

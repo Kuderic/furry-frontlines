@@ -36,6 +36,8 @@ body {
     background: rgba(255, 255, 255, 0.7); /* Optional: background to make text readable */
     padding: 10px;
     border-radius: 5px;
+    max-height: 200px;
+    overflow-y: auto;
     
     ul {
         /* border: 3px solid darkblue; */
@@ -50,6 +52,14 @@ body {
     input {
         font-family: 'Rainy Hearts', sans-serif;
         font-size: 1.5em;
+    }
+}
+
+@media (max-width: 768px) {
+    #chatBox {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
     }
 }
 
