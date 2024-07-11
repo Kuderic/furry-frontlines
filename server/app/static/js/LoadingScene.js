@@ -28,6 +28,7 @@ export class LoadingScene extends Phaser.Scene {
         this.load.image('player0', 'static/images/bunny1.png'); // Replace with your player image path
         this.load.image('player1', 'static/images/bunny2.png'); // Replace with your player image path
         this.load.image('player2', 'static/images/bunny3.png'); // Replace with your player image path
+        this.load.image('player3', 'static/images/bunny4.png'); // Replace with your player image path
         this.load.audio('bgMusic', 'static/sounds/billie-eilish-meow.mp3'); // Load the background music
         this.load.image('leftButton', 'static/images/leftButton.png'); // Load left button image
         this.load.image('rightButton', 'static/images/rightButton.png'); // Load right button image
