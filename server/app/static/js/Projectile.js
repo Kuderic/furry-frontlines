@@ -7,7 +7,6 @@ export class Projectile {
         this.sprite = scene.physics.add.sprite(x, y, 'projectile').setOrigin(0.5, 0.5);
         // Add to characters physics group 
         this.scene.projectiles.add(this.sprite);
-        this.sprite.body.setCollideWorldBounds(true);
         this.sprite.setDataEnabled();
         this.sprite.data.set('parent', this);
 
