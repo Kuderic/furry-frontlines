@@ -30,6 +30,8 @@ class GameScene extends Phaser.Scene {
     }
     
     create() {
+        messageInput.addEventListener('focus', this.onMessageInputFocus.bind(this));
+        messageInput.addEventListener('blur', this.onMessageInputBlur.bind(this));
         // Disable context menu
         this.input.mouse.disableContextMenu();
         // Attach sendMessage to the window object
@@ -43,11 +45,12 @@ class GameScene extends Phaser.Scene {
         // Set world and camera bounds
         this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
         this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-        this.scale.on('resize', this.resize, this);
+        this.cameras.main.setScroll(WORLD_WIDTH / 2, WORLD_HEIGHT / 2); // Center the camera initially
+        // this.scale.on('resize', this.resize, this);
 
         // Generate grass under the bunny layer
-        this.gg = new GrassGenerator(this); // Adjust density as needed
-        this.gg.generateGrass();
+        this.grassGenerator = new GrassGenerator(this); // Adjust density as needed
+        this.grassGenerator.generateGrass();
 
         // Create physics groups
         this.projectiles = this.physics.add.group();
@@ -64,10 +67,10 @@ class GameScene extends Phaser.Scene {
         this.ws = this.createWebsocket();
 
         // Handlers
-        this.keyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
-        this.keyRight = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
-        this.keyUp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
-        this.keyDown = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+        this.keyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+        this.keyRight = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+        this.keyUp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+        this.keyDown = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
 
         // Add right-click handling
         this.input.on('pointerdown', (pointer) => {
@@ -90,6 +93,25 @@ class GameScene extends Phaser.Scene {
         
         window.addEventListener('blur', this.onBlur.bind(this));
         window.addEventListener('focus', this.onFocus.bind(this));
+    }
+
+    addKeyboardListeners() {
+        this.input.keyboard.addCapture([
+            Phaser.Input.Keyboard.KeyCodes.A,
+            Phaser.Input.Keyboard.KeyCodes.D,
+            Phaser.Input.Keyboard.KeyCodes.W,
+            Phaser.Input.Keyboard.KeyCodes.S
+        ]);
+    }
+
+    onMessageInputFocus() {
+        this.input.keyboard.clearCaptures(); // Clear all keyboard listeners
+        console.log('Phaser keyboard input disabled');
+    }
+
+    onMessageInputBlur() {
+        this.addKeyboardListeners();
+        console.log('Phaser keyboard input enabled');
     }
     
     hitCharacter(projectile, character) {
@@ -376,7 +398,6 @@ class GameScene extends Phaser.Scene {
                 this.displayServerMessage(`${newPlayerData.name} has connected.`)
                 
                 // // Set up the camera
-                this.cameras.main.setBounds(0, 0, WORLD_HEIGHT, WORLD_WIDTH); // Set the boundaries of the camera
                 this.cameras.main.startFollow(this.player.sprite, true, 0.1, .1); // Make the camera follow the player
                 // Make fpsText ignore camera movements
                 break;
