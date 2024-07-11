@@ -8,7 +8,7 @@ export class EnemyGenerator {
     createEnemy(x, y) {
         console.log("creating enemy");
         const wolf = new Wolf(this.scene, x, y, 300, 'Tyloki');
-        this.scene.enemies.add(enemy.sprite);
+        this.scene.enemies.add(wolf.sprite);
         wolf.sprite.body.setCollideWorldBounds(true);
     }
 
