@@ -8,7 +8,8 @@ export class Projectile {
         // Add to characters physics group 
         this.scene.projectiles.add(this.sprite);
         this.sprite.body.setCollideWorldBounds(true);
-        
+        this.sprite.setDataEnabled();
+        this.sprite.data.set('parent', this);
 
         // Set the velocity based on direction
         const velocity = scene.physics.velocityFromRotation(direction, this.speed);
@@ -18,12 +19,16 @@ export class Projectile {
 
         // Destroy the projectile after it travels a certain distance or time
         scene.time.delayedCall(1000, () => {
-            this.sprite.destroy();
-            this.scene.projectiles.remove(this.sprite);
+            this.destroy();
         });
         
 
         // Log the group contents after adding the projectile
         // console.log(this.scene.projectiles.getChildren());
+    }
+
+    destroy() {
+        this.sprite.destroy();
+        this.scene.projectiles.remove(this.sprite);
     }
 }

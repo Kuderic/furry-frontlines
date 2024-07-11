@@ -3,18 +3,23 @@ import {Wolf} from './Wolf.js';
 export class EnemyGenerator {
     constructor(scene) {
         this.scene = scene;
-        this.enemyList = [];
     }
 
     createEnemy(x, y) {
+        console.log("creating enemy");
         const enemy = new Wolf(this.scene, x, y, 300, 'Tyloki');
-        this.enemyList.push(enemy);
+        this.scene.enemies.add(enemy.sprite);
     }
 
     update() {
         // Update all the enemies
-        for (let i = 0; i < this.enemyList.length; i++) {
-            this.enemyList[i].update();
+        const enemyList = this.scene.enemies.getChildren();
+        // console.log(enemyList);
+        if (enemyList.length === 0) {
+            this.createEnemy(900, 900);
+        }
+        for (let i = 0; i < enemyList.length; i++) {
+            enemyList[i].data.values.parent.update();
         }
     }
 }

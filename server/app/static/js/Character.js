@@ -1,14 +1,16 @@
 import { Projectile } from './Projectile.js';
 
+// pls dont instantiate this directly
 export class Character {
-    constructor(scene, x, y, speed, name, texture, maxHealth=10) {
+    constructor(scene, x, y, speed, name, texture, maxHealth=10, width=125, height=125) {
         this.scene = scene;
         // Create sprite
-        const sprite = scene.physics.add.sprite(x, y, texture).setOrigin(0.5, 0.5).setDisplaySize(125, 125);
+        let sprite = scene.physics.add.sprite(x, y, texture).setOrigin(0.5, 0.5).setDisplaySize(width, height);
         this.sprite = sprite;
         this.sprite.setDepth(1);
-        this.scene.characters.add(this.sprite);
         sprite.body.setCollideWorldBounds(true);
+        this.sprite.setDataEnabled();
+        this.sprite.data.set('parent', this);
 
         // Create name tag
         const nameTag = scene.add.bitmapText(x, y - 200, 'rainyhearts', name, 40).setOrigin(0.5);

@@ -21,7 +21,7 @@ export class LoadingScene extends Phaser.Scene {
         });
 
         // Load assets
-        this.load.audio('shootSound', 'static/sounds/laserShoot.wav');
+        this.load.audio('shoot', 'static/sounds/laserShoot.wav');
         this.load.image('projectile', 'static/images/projectile.png');
         this.load.image('grass1', 'static/images/margarass.png');
         this.load.image('wolf', 'static/images/wolf.png');

@@ -8,8 +8,8 @@ import {EnemyGenerator} from './EnemyGenerator.js';
 // import rexvirtualjoystickplugin from './plugins/rexvirtualjoystickplugin.min.js';
 
 const NEW_PLAYER_SPEED = 400;
-let WORLD_WIDTH = 2500;
-let WORLD_HEIGHT = 2000;
+let WORLD_WIDTH = 3500;
+let WORLD_HEIGHT = 3000;
 
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -44,7 +44,7 @@ class GameScene extends Phaser.Scene {
 
         // Set world and camera bounds
         this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-        this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        this.cameras.main.setBounds(-50, -50, WORLD_WIDTH + 50, WORLD_HEIGHT + 50);
         this.cameras.main.setScroll(WORLD_WIDTH / 2, WORLD_HEIGHT / 2); // Center the camera initially
         // this.scale.on('resize', this.resize, this);
 
@@ -54,14 +54,13 @@ class GameScene extends Phaser.Scene {
 
         // Create physics groups
         this.projectiles = this.physics.add.group();
-        this.characters = this.physics.add.group();
+        this.enemies = this.physics.add.group();
 
         // Add collision detection between projectiles and enemies
-        this.physics.add.collider(this.projectiles, this.characters, this.hitCharacter, null, this);
+        this.physics.add.collider(this.projectiles, this.enemies, this.hitCharacter, null, this);
 
         // Create enemies
         this.enemyGenerator = new EnemyGenerator(this);
-        this.enemyGenerator.createEnemy(1000, 1000);
         
         // Create websocket
         this.ws = this.createWebsocket();
@@ -83,7 +82,8 @@ class GameScene extends Phaser.Scene {
             this.shouldShoot = false;
         });
 
-        // Add music
+        // Add sounds
+        this.shootSound = this.sound.add('shoot');
         this.addBackgroundMusic();
 
         // Create movement joystick
@@ -114,18 +114,15 @@ class GameScene extends Phaser.Scene {
         console.log('Phaser keyboard input enabled');
     }
     
-    hitCharacter(projectile, character) {
-        console.log(projectile, character);
-        if (character === this.player.sprite) {
-            // ignore
-            console.log("ignored")
-            return;
-        }
+    hitCharacter(projectileSprite, characterSprite) {
+        console.log(projectileSprite, characterSprite);
 
         // Trigger effect, e.g., reduce HP
-        // character.takeDamage(1);
+        const character = characterSprite.data.values.parent;
+        character.takeDamage(1);
 
         // Destroy the projectile
+        const projectile = projectileSprite.data.values.parent;
         projectile.destroy();
 
         // Optionally, add other effects like playing a sound or animation
@@ -176,16 +173,6 @@ class GameScene extends Phaser.Scene {
         console.log('Game resumed on focus');
     }
     
-    resize(gameSize, baseSize, displaySize, resolution) {
-        const width = gameSize.width;
-        const height = gameSize.height;
-    
-        this.cameras.resize(width, height);
-    
-        // If you have UI elements or other game objects that need manual adjustment:
-        // this.yourUIElement.setPosition(width / 2, height - 50); // Example: reposition an element
-    }
-    
     update(time) {
 
         if (!this.player) return;
@@ -203,6 +190,11 @@ class GameScene extends Phaser.Scene {
         if (this.shouldShoot && time > this.lastShotTime + this.shootDelay) {
             console.log("shooting");
             this.player.shootProjectile(this.pointer.worldX, this.pointer.worldY);
+            this.shootSound.play({
+                loop: false,
+                volume: 0.75
+            });
+            
             console.log(this.projectiles.getChildren());
             this.lastShotTime = time;
         }
@@ -388,7 +380,6 @@ class GameScene extends Phaser.Scene {
 
                 // Create new Player object
                 const newPlayer = new Player(this, newPlayerData.x, newPlayerData.y, NEW_PLAYER_SPEED, newPlayerData.name, newPlayerData.color);
-                this.characters.remove(newPlayer.sprite);
                 
                 // Store new player
                 const newPlayerId = message.client_id;
