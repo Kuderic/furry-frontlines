@@ -23,6 +23,7 @@ class GameScene extends Phaser.Scene {
         this.musicStarted = false; // Flag to check if music has started
         this.lastSentPlayerInfo = {}; // keep track of player state on server. if doesnt match, then send 
         this.shootDelay = 250; // Delay in milliseconds between shots
+        this.isMobile = isMobile();
     }
     preload() {
         // Done in LoadingScene
@@ -83,32 +84,9 @@ class GameScene extends Phaser.Scene {
         this.addBackgroundMusic();
 
         // Create movement joystick
-        this.movementJoyStick = this.plugins.get('rexvirtualjoystickplugin').add(this.scene, {
-            x: 100,
-            y: this.cameras.main.height - 125,
-            radius: 40,
-            forceMin: 0,
-            base: this.add.circle(0, 0, 60, 0x888888).setDepth(100).setAlpha(0.25),
-            thumb: this.add.image(0, 0, 'joystick').setDisplaySize(80, 80).setDepth(100).setAlpha(0.5),
-        }).on('update', () => {}, this)
-        
-
-        // Move joysticks dynamically based on pointer-down
-        this.input.on('pointerdown', (pointer) => {
-            if (pointer.leftButtonDown() &&
-                pointer.x <= this.cameras.main.width * 0.7) {
-                this.movementJoyStick.base.setPosition(pointer.x, pointer.y).setAlpha(0.5)
-                this.movementJoyStick.thumb.setPosition(pointer.x, pointer.y).setAlpha(1)
-            }
-        })
-
-        // Add transparency to joysticks on pointer-up
-        this.input.on('pointerup', (pointer) => {
-            if (!this.movementJoyStick.force) {
-                this.movementJoyStick.base.setAlpha(0.15)
-                this.movementJoyStick.thumb.setAlpha(0.35)
-            }
-        })
+        if (this.isMobile) {
+            this.createJoysticks();
+        }
         
         window.addEventListener('blur', this.onBlur.bind(this));
         window.addEventListener('focus', this.onFocus.bind(this));
@@ -130,6 +108,34 @@ class GameScene extends Phaser.Scene {
 
         // Optionally, add other effects like playing a sound or animation
         console.log(`${character.name} hit! HP: ${character.currentHp}`);
+    }
+
+    createJoysticks() {
+        this.movementJoyStick = this.plugins.get('rexvirtualjoystickplugin').add(this.scene, {
+            x: 100,
+            y: this.cameras.main.height - 125,
+            radius: 40,
+            forceMin: 0,
+            base: this.add.circle(0, 0, 60, 0x888888).setDepth(100).setAlpha(0.25),
+            thumb: this.add.image(0, 0, 'joystick').setDisplaySize(80, 80).setDepth(100).setAlpha(0.5),
+        }).on('update', () => {}, this)
+
+        // Move joysticks dynamically based on pointer-down
+        this.input.on('pointerdown', (pointer) => {
+            if (pointer.leftButtonDown() &&
+                pointer.x <= this.cameras.main.width * 0.7) {
+                this.movementJoyStick.base.setPosition(pointer.x, pointer.y).setAlpha(0.5)
+                this.movementJoyStick.thumb.setPosition(pointer.x, pointer.y).setAlpha(1)
+            }
+        })
+
+        // Add transparency to joysticks on pointer-up
+        this.input.on('pointerup', (pointer) => {
+            if (!this.movementJoyStick.force) {
+                this.movementJoyStick.base.setAlpha(0.15)
+                this.movementJoyStick.thumb.setAlpha(0.35)
+            }
+        })
     }
 
     onBlur() {
@@ -206,21 +212,23 @@ class GameScene extends Phaser.Scene {
         let forceX = 0
         let forceY = 0;
 
-        if (this.movementJoyStick.forceX > 0) {
-            forceX = Math.min(this.movementJoyStick.forceX / 100, 1);
-        } else if (this.movementJoyStick.forceX < 0) {
-            forceX = Math.max(this.movementJoyStick.forceX / 100, -1);
-        }
-        if (this.movementJoyStick.forceY > 0) {
-            forceY = Math.min(this.movementJoyStick.forceY / 100, 1);
-        } else if (this.movementJoyStick.forceY < 0) {
-            forceY = Math.max(this.movementJoyStick.forceY / 100, -1);
-        }
-        // console.log(forceX, forceY);
-
-        if (forceX || forceY) {
-            player.sprite.setVelocityX(forceX * player.speed);
-            player.sprite.setVelocityY(forceY * player.speed);
+        if (this.isMobile) {
+            if (this.movementJoyStick.forceX > 0) {
+                forceX = Math.min(this.movementJoyStick.forceX / 100, 1);
+            } else if (this.movementJoyStick.forceX < 0) {
+                forceX = Math.max(this.movementJoyStick.forceX / 100, -1);
+            }
+            if (this.movementJoyStick.forceY > 0) {
+                forceY = Math.min(this.movementJoyStick.forceY / 100, 1);
+            } else if (this.movementJoyStick.forceY < 0) {
+                forceY = Math.max(this.movementJoyStick.forceY / 100, -1);
+            }
+            // console.log(forceX, forceY);
+    
+            if (forceX || forceY) {
+                player.sprite.setVelocityX(forceX * player.speed);
+                player.sprite.setVelocityY(forceY * player.speed);
+            }
         }
 
         if (player.sprite.body.velocity.x !== this.lastSentPlayerInfo.velocity_x ||
@@ -432,6 +440,10 @@ function removeElementAfterDelay(element, delay) {
 function scrollToBottom() {
     const messagesList = document.getElementById('messagesList');
     messagesList.scrollTop = messagesList.scrollHeight;
+}
+
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
 export const phaserConfig = {
